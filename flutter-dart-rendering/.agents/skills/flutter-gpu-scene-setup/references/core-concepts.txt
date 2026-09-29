@@ -1,0 +1,187 @@
+Title: Core concepts
+
+URL Source: https://fscene.dev/getting-started/core-concepts/
+
+Markdown Content:
+【1†Skip to content】
+
+【2†Scene】
+
+Search Ctrl K
+
+ Cancel 
+
+【3†GitHub†github.com】
+
+*   
+Getting Started
+    *   【4†Welcome to Scene】
+    *   【5†Installation】
+    *   【6†Your first scene】
+    *   【7†Core concepts】
+
+*   
+Editor
+    *   【8†The Flutter Scene Editor】
+
+*   
+Guides
+    *   【9†Overview】
+    *   【10†Declarative scenes】
+    *   【11†Build a product configurator】
+    *   【12†Scene graph】
+    *   【13†Geometry】
+    *   【14†Materials】
+    *   【15†Custom materials】
+    *   【16†Lighting and environment】
+    *   【17†Post-processing】
+    *   【18†Cameras】
+    *   【19†Assets and loading】
+    *   【20†Animation】
+    *   【21†Picking and input】
+    *   【22†Widgets in the scene】
+
+*   
+Reference
+    *   【23†flutter_scene API reference】
+    *   【24†flutter_scene_rapier API reference】
+
+【3†GitHub†github.com】
+
+On this page
+
+*   【1†Overview】
+*   【25†Scene】
+*   【26†Two styles, one scene】
+*   【27†Node】
+*   【28†Component】
+*   【29†Mesh, Geometry, and Material】
+*   【30†Camera】
+*   【31†The render loop】
+*   【32†Where to go next】
+
+## On this page
+
+*   【1†Overview】
+*   【25†Scene】
+*   【26†Two styles, one scene】
+*   【27†Node】
+*   【28†Component】
+*   【29†Mesh, Geometry, and Material】
+*   【30†Camera】
+*   【31†The render loop】
+*   【32†Where to go next】
+
+# Core concepts
+
+A handful of types appear in almost every Flutter Scene program. This page introduces them so the guides can go deeper without re-explaining the basics.
+
+## Scene
+
+【25†Section titled “Scene”】
+
+A `Scene` is the root of the scene graph and the thing that renders. It owns a root `Node`, the lighting environment, tone mapping, post-processing, and the render targets. Every program has a `Scene` underneath; the question is only who owns it, you (the imperative style) or a `SceneView.declarative` (the declarative style).
+
+## Two styles, one scene
+
+【26†Section titled “Two styles, one scene”】
+
+Flutter Scene offers two ways to work with that scene, and they share every underlying type.
+
+**Declarative.** Describe the scene in `build()` with widgets, `SceneView.declarative` at the root, `SceneNode`, `SceneMesh`, and `SceneModel` below it. Rebuilding reconciles the description onto retained engine objects the way Flutter reconciles UI. Unchanged rebuilds write nothing, changed properties are applied in place, and structural edits attach and detach nodes. State-driven scenes (configurators, viewers, dashboards) fall out of `setState`, and hot reload works on scene structure.
+
+**Imperative.** Construct a `Scene`, build `Node`s, and mutate the graph over time from your own code, then render it with `SceneView(scene)`. This is the engine’s native surface, and the right tool when content is generated or restructured procedurally, editors, games that stream worlds in and out, anything where the scene is not a function of widget state.
+
+Choose per subtree, not per app. A declarative tree can host an app-owned subtree (`SceneNodeHost`), an imperative scene can host declarative children (`SceneSubtree`, or the `children` parameter on either `SceneView` constructor), and `SceneNodeController` hands imperative code a handle to a widget-managed node. Start declarative and graduate pieces to the imperative API as they need it. The 【10†Declarative scenes】 guide covers the widget layer and the bridges in depth.
+
+One ownership rule keeps the composition sane, whoever created a node owns its structure. Imperative code may freely read widget-managed nodes, but writes to properties a widget declares are overwritten on its next build.
+
+## Node
+
+【27†Section titled “Node”】
+
+A `Node` is a transform in the scene graph. A node may carry a `Mesh`, hold child nodes, and run behavior through attached `Component`s. Child transforms compose with their parent, so moving a parent moves its whole subtree. In the declarative style you declare nodes as widgets; underneath they are these same objects.
+
+## Component
+
+【28†Section titled “Component”】
+
+A `Component` is behavior bound to a node, a small class with lifecycle hooks the engine drives. If you have written behavior scripts in other engines, this will feel familiar.
+
+```
+class Bob extends Component {  double _elapsed = 0;
+  @override  void update(double deltaSeconds) {    _elapsed += deltaSeconds;    node.localTransform.setTranslationRaw(0, sin(_elapsed) * 0.5, 0);    node.markTransformDirty();  }}
+```
+
+The hooks, in the order they fire, are `onAttach` (added to a node), `onLoad` (one-time async setup, such as loading an asset; `update` waits for it), `onMount` (the node joined a live scene), `update` (every frame, with the frame delta), `fixedUpdate` (every fixed physics step, for motion that must advance on the physics clock), `onUnmount`, and `onDetach`.
+
+Components are the recommended home for continuous motion in both styles. In the declarative style they are the “mutate for motion” half of the contract (declare structure with widgets, animate it with components, so nothing rebuilds per frame); in the imperative style they are how you avoid scattering per-frame logic across ticker callbacks. The engine’s own features (mesh rendering, lights, cameras, LOD, particles) are components too, so your behaviors and the engine’s sit on the same substrate.
+
+## Mesh, Geometry, and Material
+
+【29†Section titled “Mesh, Geometry, and Material”】
+
+A `Mesh` is a `Geometry` paired with a `Material`. The geometry is the shape (vertices and indices), and the material is the shading. Built-in geometry includes primitives such as `CuboidGeometry` and `SphereGeometry`, and built-in materials include `PhysicallyBasedMaterial`, `UnlitMaterial`, and custom `ShaderMaterial`. Geometries and materials are GPU-backed; create them once and reuse them rather than constructing them every frame or every build.
+
+## Camera
+
+【30†Section titled “Camera”】
+
+A `Camera`, usually a `PerspectiveCamera`, describes the viewpoint. With either `SceneView` constructor you supply a fixed `camera`, a `cameraBuilder` that returns a camera each frame (handy for animating the view), or nothing at all, in which case the view uses the scene’s primary camera or a default. The 【18†Cameras】 guide covers all of these.
+
+## The render loop
+
+【31†Section titled “The render loop”】
+
+`SceneView` drives the loop. Each frame it advances any `Component`s attached to nodes, builds a camera, and renders the scene. Constructing a `Scene` starts loading the engine’s shared resources, and rendering is gated on that finishing, so the view simply skips frames until the engine is ready. You can also render a `Scene` directly onto a `dart:ui``Canvas` from a `CustomPainter` when you need full control.
+
+## Where to go next
+
+【32†Section titled “Where to go next”】
+
+The 【9†Guides】 cover each subsystem in depth, each with a live demo.
+
+*   【10†Declarative scenes】
+*   【12†Scene graph】
+*   【13†Geometry】
+*   【14†Materials】
+*   【16†Lighting and environment】
+*   【17†Post-processing】
+*   【18†Cameras】
+*   【19†Assets and loading】
+
+【6†Previous Your first scene】【8†Next The Flutter Scene Editor】
+
+Links/Buttons:
+- [1](https://fscene.dev/getting-started/core-concepts/#_top)
+- [2](https://fscene.dev/)
+- [3](https://github.com/bdero/flutter_scene)
+- [4](https://fscene.dev/getting-started/)
+- [5](https://fscene.dev/getting-started/installation/)
+- [6](https://fscene.dev/getting-started/your-first-scene/)
+- [7](https://fscene.dev/getting-started/core-concepts/)
+- [8](https://fscene.dev/editor/)
+- [9](https://fscene.dev/guides/)
+- [10](https://fscene.dev/guides/declarative-scenes/)
+- [11](https://fscene.dev/guides/build-a-configurator/)
+- [12](https://fscene.dev/guides/scene-graph/)
+- [13](https://fscene.dev/guides/geometry/)
+- [14](https://fscene.dev/guides/materials/)
+- [15](https://fscene.dev/guides/custom-materials/)
+- [16](https://fscene.dev/guides/lighting-and-environment/)
+- [17](https://fscene.dev/guides/post-processing/)
+- [18](https://fscene.dev/guides/cameras/)
+- [19](https://fscene.dev/guides/assets-and-loading/)
+- [20](https://fscene.dev/guides/animation/)
+- [21](https://fscene.dev/guides/picking-and-input/)
+- [22](https://fscene.dev/guides/widgets/)
+- [23](https://fscene.dev/api/flutter_scene/latest/)
+- [24](https://fscene.dev/api/flutter_scene_rapier/latest/)
+- [25](https://fscene.dev/getting-started/core-concepts/#scene)
+- [26](https://fscene.dev/getting-started/core-concepts/#two-styles-one-scene)
+- [27](https://fscene.dev/getting-started/core-concepts/#node)
+- [28](https://fscene.dev/getting-started/core-concepts/#component)
+- [29](https://fscene.dev/getting-started/core-concepts/#mesh-geometry-and-material)
+- [30](https://fscene.dev/getting-started/core-concepts/#camera)
+- [31](https://fscene.dev/getting-started/core-concepts/#the-render-loop)
+- [32](https://fscene.dev/getting-started/core-concepts/#where-to-go-next)

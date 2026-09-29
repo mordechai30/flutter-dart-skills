@@ -1,0 +1,232 @@
+Title: Assets and loading
+
+URL Source: https://fscene.dev/guides/assets-and-loading/
+
+Markdown Content:
+【1†Skip to content】
+
+【2†Scene】
+
+Search Ctrl K
+
+ Cancel 
+
+【3†GitHub†github.com】
+
+*   
+Getting Started
+    *   【4†Welcome to Scene】
+    *   【5†Installation】
+    *   【6†Your first scene】
+    *   【7†Core concepts】
+
+*   
+Editor
+    *   【8†The Flutter Scene Editor】
+
+*   
+Guides
+    *   【9†Overview】
+    *   【10†Declarative scenes】
+    *   【11†Build a product configurator】
+    *   【12†Scene graph】
+    *   【13†Geometry】
+    *   【14†Materials】
+    *   【15†Custom materials】
+    *   【16†Lighting and environment】
+    *   【17†Post-processing】
+    *   【18†Cameras】
+    *   【19†Assets and loading】
+    *   【20†Animation】
+    *   【21†Picking and input】
+    *   【22†Widgets in the scene】
+
+*   
+Reference
+    *   【23†flutter_scene API reference】
+    *   【24†flutter_scene_rapier API reference】
+
+【3†GitHub†github.com】
+
+On this page
+
+*   【1†Overview】
+*   【25†Loading a model at runtime】
+*   【26†Declarative loading with SceneModel】
+*   【27†Preprocessing at build time】
+*   【28†Showing a loading screen】
+*   【29†Warming up before the first frame】
+*   【30†The .fscene format】
+*   【31†Textures】
+*   【32†Streaming and prefabs】
+*   【33†Key API】
+
+## On this page
+
+*   【1†Overview】
+*   【25†Loading a model at runtime】
+*   【26†Declarative loading with SceneModel】
+*   【27†Preprocessing at build time】
+*   【28†Showing a loading screen】
+*   【29†Warming up before the first frame】
+*   【30†The .fscene format】
+*   【31†Textures】
+*   【32†Streaming and prefabs】
+*   【33†Key API】
+
+# Assets and loading
+
+Most scenes are built from 3D models authored elsewhere. Flutter Scene imports glTF binaries (`.glb`) two ways. You can load a `.glb` directly at runtime, or preprocess it into the engine’s `.fsceneb` package at build time and load that. Both produce the same live `Node` tree you add to a scene.
+
+The demo below loads a `.glb` model at runtime and frames it from its own bounds.
+
+▶Run demo Loads a live Flutter Scene build
+
+A glTF model loaded at runtime with Node.fromGlbAsset.
+
+## Loading a model at runtime
+
+【25†Section titled “Loading a model at runtime”】
+
+`Node.fromGlbAsset` parses a `.glb` from the asset bundle and returns a ready-to-add `Node`. Declare the file under `assets` in your `pubspec.yaml`, then load it.
+
+`final model = await Node.fromGlbAsset('assets/model.glb');scene.add(model);`
+
+The imported tree keeps the model’s node hierarchy, meshes, and materials. The materials are lit by the scene’s 【16†environment】 like any other.
+
+`Node.fromGlbBytes` does the same from bytes you already have (a network download, a file the user picked), so runtime import is the path for content that is not known at build time.
+
+`final model = await Node.fromGlbBytes(bytes);`
+
+## Declarative loading with SceneModel
+
+【26†Section titled “Declarative loading with SceneModel”】
+
+With the declarative API, `SceneModel` wraps the whole load-and-mount flow in a widget.
+
+`SceneView.declarative(  children: [    SceneModel(      'assets/robot.glb',      placeholder: (context) => SceneMesh(geometry: ghost, material: ghostMat),      error: (context, error) => SceneNode(),      onLoaded: (modelRoot) => debugPrint('mounted ${modelRoot.name}'),    ),  ],)`
+
+The `placeholder` and `error` builders produce _scene_ subtrees (not 2D UI) mounted in the model’s place while it loads or if it fails. Sources beyond the asset bundle plug in through `SceneModelSource`, `MemoryModelSource` wraps bytes your app fetched itself (a network download, a local cache), and a subclass can override `createNode` to import through a custom pipeline.
+
+Models are cached and shared. Widgets whose sources have equal cache keys load and import once, and each mounts its own clone of the shared template, so a row of the same product costs one GPU upload. The template is dropped when the last widget using it unmounts. Asset-sourced models also participate in hot reload, editing the `.glb` reloads mounted instances in place.
+
+## Preprocessing at build time
+
+【27†Section titled “Preprocessing at build time”】
+
+Parsing glTF at runtime costs time on the first frame. For content you ship with the app, convert it to the engine’s `.fsceneb` package at build time instead. A build hook does the conversion, and `loadScene` loads the result by its source path.
+
+Add a `hook/build.dart` that calls `buildScenes`.
+
+```
+import 'package:hooks/hooks.dart';import 'package:flutter_scene/build_hooks.dart';
+void main(List<String> args) {  build(args, (input, output) async {    buildScenes(      buildInput: input,      buildOutput: output,      inputFilePaths: ['assets_src/model.glb'],    );  });}
+```
+
+Then load it by the same source path. The engine loads the prebuilt package, not the original `.glb`.
+
+`final model = await loadScene('assets_src/model.glb');scene.add(model);`
+
+`loadScene` also supports seamless hot reload of the asset during development through its `onReload` callback.
+
+## Showing a loading screen
+
+【28†Section titled “Showing a loading screen”】
+
+Building a scene takes several frames. Models decode, textures upload, and the environment bakes. If you add nodes as each one arrives, the scene renders half-built, with objects appearing one at a time. To avoid that, hand `SceneView` a `ResourceGroup` and it holds the scene off-screen until everything is ready, then reveals it in one frame.
+
+Track each load in the group, then give the view a `loadingBuilder` to show while it waits. The builder receives the group’s progress from 0 to 1, so you can drive a progress bar.
+
+```
+final loading = ResourceGroup();
+Future<void> _load() async {  final modelFuture = loading.add(Node.fromGlbAsset('assets/model.glb'));  final skyFuture = loading.add(    EnvironmentMap.fromEquirectImageAsset(assetPath: 'assets/sky.png'),  );  scene.add(await modelFuture);  scene.environment = await skyFuture;}
+// ...in build():SceneView(  scene,  loading: loading,  loadingBuilder: (context, progress) => MyLoadingScreen(progress: progress),)
+```
+
+Add the loaded nodes to the scene as usual. The view simply does not draw the scene until the group finishes, so nothing pops in at the origin along the way. Register every load up front, before awaiting, so the progress reflects the whole set. `revealMinDuration` keeps a fast load from flashing the loading screen for a single frame, and a view with no `loading` renders immediately, exactly as before.
+
+## Warming up before the first frame
+
+【29†Section titled “Warming up before the first frame”】
+
+Even once a scene’s data is loaded, the first frame that draws a new material has to compile its render pipeline, which can stall that one frame. Set `warmUp` on `SceneView` to compile the scene’s pipelines while the loading screen is still up, so the first visible frame is smooth.
+
+`SceneView(  scene,  loading: loading,  warmUp: true,  loadingBuilder: (context, progress) => MyLoadingScreen(progress: progress),)`
+
+Warm-up runs once the loading group is ready and before the scene is revealed, so populate the scene first; it compiles whatever is attached when it runs. For manual control outside a `SceneView`, call `Scene.warmUp` with the views you will render.
+
+Large models loaded at runtime with `Node.fromGlbAsset` also pack their geometry off the UI thread, so a heavy import does not freeze the app while the loading screen animates.
+
+## The .fscene format
+
+【30†Section titled “The .fscene format”】
+
+`.fsceneb` is the binary form of the `.fscene` document format, the engine’s own representation of a scene. The build hook writes it, and `loadScene` reads it. You rarely touch the format directly; the 【34†`loadScene`】 loader and the document types in the 【35†`fscene` library】 cover authoring and inspecting one.
+
+## Textures
+
+【31†Section titled “Textures”】
+
+Textures referenced by a glTF are imported with the model, so a textured asset arrives fully shaded. For a standalone image, `loadTexture` loads one by its source path and returns a `TextureSource` you assign to any material texture slot.
+
+`final ground = await loadTexture('assets/ground.png');material.baseColorTexture = ground;`
+
+The material slots take a `TextureSource`, not a raw `gpu.Texture`, which is what lets the same image be shared, cached, and hot reloaded. With the 【36†asset pipeline】 set up, the image is block-compressed with a full mip chain at build time and `loadTexture` reads that; editing the source reconverts it and swaps the new texture into every bound material in place. Pass `sampling` for a `TextureSampling` other than the trilinear-repeat default, and `releaseTexture` to drop one from the cache.
+
+Environment panoramas are a separate path; see 【16†Lighting and environment】.
+
+## Streaming and prefabs
+
+【32†Section titled “Streaming and prefabs”】
+
+For large scenes you can load subtrees on demand and reuse instanced subtrees as prefabs rather than loading everything up front. See 【37†`loadSceneSubtree`】 and the prefab types in the 【35†`fscene` library】.
+
+## Key API
+
+【33†Section titled “Key API”】
+
+【38†`Node.fromGlbAsset`】, 【39†`Node.fromGlbBytes`】, 【34†`loadScene`】, and 【40†`buildScenes`】 (from `package:flutter_scene/build_hooks.dart`) for loading. `ResourceGroup`, `SceneView.loading`, `SceneView.warmUp`, and `Scene.warmUp` for loading screens and warm-up.
+
+【18†Previous Cameras】【20†Next Animation】
+
+Links/Buttons:
+- [1](https://fscene.dev/guides/assets-and-loading/#_top)
+- [2](https://fscene.dev/)
+- [3](https://github.com/bdero/flutter_scene)
+- [4](https://fscene.dev/getting-started/)
+- [5](https://fscene.dev/getting-started/installation/)
+- [6](https://fscene.dev/getting-started/your-first-scene/)
+- [7](https://fscene.dev/getting-started/core-concepts/)
+- [8](https://fscene.dev/editor/)
+- [9](https://fscene.dev/guides/)
+- [10](https://fscene.dev/guides/declarative-scenes/)
+- [11](https://fscene.dev/guides/build-a-configurator/)
+- [12](https://fscene.dev/guides/scene-graph/)
+- [13](https://fscene.dev/guides/geometry/)
+- [14](https://fscene.dev/guides/materials/)
+- [15](https://fscene.dev/guides/custom-materials/)
+- [16](https://fscene.dev/guides/lighting-and-environment/)
+- [17](https://fscene.dev/guides/post-processing/)
+- [18](https://fscene.dev/guides/cameras/)
+- [19](https://fscene.dev/guides/assets-and-loading/)
+- [20](https://fscene.dev/guides/animation/)
+- [21](https://fscene.dev/guides/picking-and-input/)
+- [22](https://fscene.dev/guides/widgets/)
+- [23](https://fscene.dev/api/flutter_scene/latest/)
+- [24](https://fscene.dev/api/flutter_scene_rapier/latest/)
+- [25](https://fscene.dev/guides/assets-and-loading/#loading-a-model-at-runtime)
+- [26](https://fscene.dev/guides/assets-and-loading/#declarative-loading-with-scenemodel)
+- [27](https://fscene.dev/guides/assets-and-loading/#preprocessing-at-build-time)
+- [28](https://fscene.dev/guides/assets-and-loading/#showing-a-loading-screen)
+- [29](https://fscene.dev/guides/assets-and-loading/#warming-up-before-the-first-frame)
+- [30](https://fscene.dev/guides/assets-and-loading/#the-fscene-format)
+- [31](https://fscene.dev/guides/assets-and-loading/#textures)
+- [32](https://fscene.dev/guides/assets-and-loading/#streaming-and-prefabs)
+- [33](https://fscene.dev/guides/assets-and-loading/#key-api)
+- [34](https://fscene.dev/api/flutter_scene/latest/scene/loadScene.html)
+- [35](https://fscene.dev/api/flutter_scene/latest/fscene/)
+- [36](https://fscene.dev/getting-started/installation/#set-up-the-asset-pipeline)
+- [37](https://fscene.dev/api/flutter_scene/latest/scene/loadSceneSubtree.html)
+- [38](https://fscene.dev/api/flutter_scene/latest/scene/Node/fromGlbAsset.html)
+- [39](https://fscene.dev/api/flutter_scene/latest/scene/Node/fromGlbBytes.html)
+- [40](https://fscene.dev/api/flutter_scene/latest/build_hooks/buildScenes.html)

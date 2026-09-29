@@ -1,0 +1,201 @@
+Title: Animation
+
+URL Source: https://fscene.dev/guides/animation/
+
+Markdown Content:
+【1†Skip to content】
+
+【2†Scene】
+
+Search Ctrl K
+
+ Cancel 
+
+【3†GitHub†github.com】
+
+*   
+Getting Started
+    *   【4†Welcome to Scene】
+    *   【5†Installation】
+    *   【6†Your first scene】
+    *   【7†Core concepts】
+
+*   
+Editor
+    *   【8†The Flutter Scene Editor】
+
+*   
+Guides
+    *   【9†Overview】
+    *   【10†Declarative scenes】
+    *   【11†Build a product configurator】
+    *   【12†Scene graph】
+    *   【13†Geometry】
+    *   【14†Materials】
+    *   【15†Custom materials】
+    *   【16†Lighting and environment】
+    *   【17†Post-processing】
+    *   【18†Cameras】
+    *   【19†Assets and loading】
+    *   【20†Animation】
+    *   【21†Picking and input】
+    *   【22†Widgets in the scene】
+
+*   
+Reference
+    *   【23†flutter_scene API reference】
+    *   【24†flutter_scene_rapier API reference】
+
+【3†GitHub†github.com】
+
+On this page
+
+*   【1†Overview】
+*   【25†Finding a model’s animations】
+*   【26†Playing a clip】
+*   【27†Pausing, seeking, and resuming】
+*   【28†Scrubbing and speed】
+*   【29†Blending】
+*   【30†Declarative playback】
+*   【31†Hot reload】
+*   【32†Key API】
+
+## On this page
+
+*   【1†Overview】
+*   【25†Finding a model’s animations】
+*   【26†Playing a clip】
+*   【27†Pausing, seeking, and resuming】
+*   【28†Scrubbing and speed】
+*   【29†Blending】
+*   【30†Declarative playback】
+*   【31†Hot reload】
+*   【32†Key API】
+
+# Animation
+
+Models authored with animation bring it along when imported. A glTF’s keyframed animations arrive as 【33†`Animation`】 objects on the loaded node, and you play one by instantiating it as an 【34†`AnimationClip`】. Clips carry their own playback state, so the same animation can run at different speeds and blends on different subtrees.
+
+The demo below loads a model with several imported animations and plays three of them at once. Drag the weights to blend between idling, walking, and running.
+
+▶Run demo Loads a live Flutter Scene build
+
+Three imported animations blended by weight on one skinned model.
+
+## Finding a model’s animations
+
+【25†Section titled “Finding a model’s animations”】
+
+A loaded model lists its imported animations on 【35†`parsedAnimations`】, and 【36†`findAnimationByName`】 looks one up.
+
+```
+final dash = await loadScene('assets/dash.glb');scene.add(dash);
+for (final animation in dash.parsedAnimations) {  print(animation.name); // Idle, Walk, Run, ...}
+```
+
+## Playing a clip
+
+【26†Section titled “Playing a clip”】
+
+【37†`createAnimationClip`】 binds an animation to the node’s subtree and returns the clip. Set it looping and start it.
+
+`final walk = dash.createAnimationClip(dash.findAnimationByName('Walk')!)  ..loop = true  ..play();`
+
+The engine advances playing clips every frame; there is nothing to pump from your own tick. A non-looping clip pauses itself at its final keyframe.
+
+## Pausing, seeking, and resuming
+
+【27†Section titled “Pausing, seeking, and resuming”】
+
+A clip’s playback controls cover the states you would expect from a media player.
+
+`walk.pause(); // hold the current posewalk.seek(0.4); // move the playhead to 0.4s (stays paused)walk.play(); // resume from wherever the playhead iswalk.gotoAndPlay(0.4); // seek and play in one callwalk.stop(); // pause and rewind to the beginningwalk.replay(); // restart from the beginning and play`
+
+`seek` moves the playhead without changing whether the clip is playing, so a paused clip poses the model at that time, which is how you drive an animation from something like a scroll position or a slider. `gotoAndPlay` combines the seek with starting playback, handy for playing a specific moment on demand (a reaction, a door opening from the halfway point). `replay` is the fresh-start variant for non-looping clips that were left paused at their end.
+
+## Scrubbing and speed
+
+【28†Section titled “Scrubbing and speed”】
+
+`playbackTime` is the playhead in seconds; reading it tells you where the clip is, and assigning it is equivalent to `seek`. `playbackTimeScale` multiplies playback speed; `2` is double speed and negative values play in reverse.
+
+`walk.playbackTime = 0.4; // same as walk.seek(0.4)walk.playbackTimeScale = -1.0; // play backward`
+
+The clip’s duration comes from its animation’s `endTime`, and seeks are clamped to it.
+
+## Blending
+
+【29†Section titled “Blending”】
+
+Multiple clips playing on the same node blend by their `weight`, from `0` to `1`. An internal 【38†`AnimationPlayer`】 mixes them each frame and normalizes the weights when they sum past `1`, so any mix of slider values is valid. That is all the demo above does, three looping clips, three weights.
+
+```
+final idle = dash.createAnimationClip(dash.findAnimationByName('Idle')!)  ..loop = true  ..play();final run = dash.createAnimationClip(dash.findAnimationByName('Run')!)  ..loop = true  ..weight = 0  ..play();
+// Cross-fade by moving weight between clips over time.idle.weight = 1.0 - t;run.weight = t;
+```
+
+Weighting is also how you cross-fade a state change smoothly. Keep both clips playing and animate the weights over a fraction of a second rather than swapping clips outright.
+
+## Declarative playback
+
+【30†Section titled “Declarative playback”】
+
+With the declarative API, `SceneModel` plays imported animations from an `animations` list of `SceneAnimationSpec`s, each naming an animation with its playback state.
+
+`SceneModel(  'assets/dash.glb',  animations: [    SceneAnimationSpec('Idle', weight: idleWeight),    SceneAnimationSpec('Walk', weight: walkWeight),    SceneAnimationSpec('Run', weight: runWeight, speed: 1.2),  ],)`
+
+Rebuilding with different specs diffs them onto the underlying clips as plain property writes, so blend weights compose with ordinary Flutter animations (a `TweenAnimationBuilder` cross-fading two weights, a slider driving one through `setState`). A spec that disappears stops and unregisters its clip; a one-shot spec (`loop: false`) whose `playing` flips from false to true restarts from the beginning, while a looping spec resumes. The demo at the top of this page is the imperative version of exactly this blend; the declarative form replaces the clip bookkeeping with state.
+
+## Hot reload
+
+【31†Section titled “Hot reload”】
+
+Clips survive model hot reload. When an edited model is reloaded in place (see 【19†Assets and loading】), each clip re-binds to the new subtree by node name and keeps its playhead, weights, and playing state, so an animation keeps running across an asset edit.
+
+## Key API
+
+【32†Section titled “Key API”】
+
+【33†`Animation`】, 【34†`AnimationClip`】, 【38†`AnimationPlayer`】, 【35†`Node.parsedAnimations`】, 【36†`Node.findAnimationByName`】, and 【37†`Node.createAnimationClip`】.
+
+【19†Previous Assets and loading】【21†Next Picking and input】
+
+Links/Buttons:
+- [1](https://fscene.dev/guides/animation/#_top)
+- [2](https://fscene.dev/)
+- [3](https://github.com/bdero/flutter_scene)
+- [4](https://fscene.dev/getting-started/)
+- [5](https://fscene.dev/getting-started/installation/)
+- [6](https://fscene.dev/getting-started/your-first-scene/)
+- [7](https://fscene.dev/getting-started/core-concepts/)
+- [8](https://fscene.dev/editor/)
+- [9](https://fscene.dev/guides/)
+- [10](https://fscene.dev/guides/declarative-scenes/)
+- [11](https://fscene.dev/guides/build-a-configurator/)
+- [12](https://fscene.dev/guides/scene-graph/)
+- [13](https://fscene.dev/guides/geometry/)
+- [14](https://fscene.dev/guides/materials/)
+- [15](https://fscene.dev/guides/custom-materials/)
+- [16](https://fscene.dev/guides/lighting-and-environment/)
+- [17](https://fscene.dev/guides/post-processing/)
+- [18](https://fscene.dev/guides/cameras/)
+- [19](https://fscene.dev/guides/assets-and-loading/)
+- [20](https://fscene.dev/guides/animation/)
+- [21](https://fscene.dev/guides/picking-and-input/)
+- [22](https://fscene.dev/guides/widgets/)
+- [23](https://fscene.dev/api/flutter_scene/latest/)
+- [24](https://fscene.dev/api/flutter_scene_rapier/latest/)
+- [25](https://fscene.dev/guides/animation/#finding-a-models-animations)
+- [26](https://fscene.dev/guides/animation/#playing-a-clip)
+- [27](https://fscene.dev/guides/animation/#pausing-seeking-and-resuming)
+- [28](https://fscene.dev/guides/animation/#scrubbing-and-speed)
+- [29](https://fscene.dev/guides/animation/#blending)
+- [30](https://fscene.dev/guides/animation/#declarative-playback)
+- [31](https://fscene.dev/guides/animation/#hot-reload)
+- [32](https://fscene.dev/guides/animation/#key-api)
+- [33](https://fscene.dev/api/flutter_scene/latest/scene/Animation-class.html)
+- [34](https://fscene.dev/api/flutter_scene/latest/scene/AnimationClip-class.html)
+- [35](https://fscene.dev/api/flutter_scene/latest/scene/Node/parsedAnimations.html)
+- [36](https://fscene.dev/api/flutter_scene/latest/scene/Node/findAnimationByName.html)
+- [37](https://fscene.dev/api/flutter_scene/latest/scene/Node/createAnimationClip.html)
+- [38](https://fscene.dev/api/flutter_scene/latest/scene/AnimationPlayer-class.html)

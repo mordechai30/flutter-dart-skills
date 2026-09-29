@@ -1,0 +1,250 @@
+Title: GpuImageSurface class - flutter_gpu library
+
+URL Source: https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface-class.html
+
+Markdown Content:
+menu
+1.   【1†Flutter】
+2.   【2†gpu.dart】
+3.   GpuImageSurface class
+
+GpuImageSurface
+
+ dark_mode  light_mode 
+
+# GpuImageSurface class 【3†final†dart.dev】
+
+A pool of presentable Flutter GPU render targets drawn by Flutter as a 【4†ui.Image】.
+
+An image surface is useful when GPU content is rendered repeatedly and then drawn by Flutter as a 【4†ui.Image】. It owns the final color textures that may be sampled by Flutter after a frame is presented. The renderer is still responsible for ordinary intermediate render targets such as depth, stencil, multisample, shadow, or post-processing textures.
+
+The surface chooses how many backing textures to retain. Applications should acquire a frame when they are ready to render and let the surface decide whether an existing texture can be reused or a new texture is needed.
+
+To render a frame, call 【5†acquireNextFrame】, render into the returned 【6†GpuSurfaceFrame.colorTexture】, call 【7†GpuSurfaceFrame.present】 with the command buffer that contains the final writes, submit that command buffer, and then draw 【8†currentImage】.
+
+Implemented types
+*   【9†GpuSurface】
+
+## Properties
+
+【8†currentImage】→ 【4†Image】? The most recently presented image, or null if no frame has been presented. 
+
+no setter
+
+【10†debugBackingTextureCount】→ 【11†int】 The number of backing textures currently retained by this surface. 
+
+no setter
+
+【12†format】→ 【13†PixelFormat】 The color format of frames acquired from this surface. 
+
+no setter
+
+【14†hashCode】→ 【11†int】 The hash code for this object. 
+
+no setter inherited
+
+【15†height】→ 【11†int】 The height, in pixels, of frames acquired from this surface. 
+
+no setter
+
+【16†runtimeType】→ 【17†Type】 A representation of the runtime type of the object. 
+
+no setter inherited
+
+【18†width】→ 【11†int】 The width, in pixels, of frames acquired from this surface. 
+
+no setter
+
+## Methods
+
+【5†acquireNextFrame】() → 【19†GpuImageSurfaceFrame】 Acquires a color texture that can be used as the final render target. 
+
+override
+
+【20†noSuchMethod】(【21†Invocation】invocation) → dynamic Invoked when a nonexistent method or property is accessed. 
+
+inherited
+
+【22†resize】(【11†int】width, 【11†int】height) → void Changes the size of future frames acquired from this surface. 【23†toString】() → 【24†String】 A string representation of this object. 
+
+inherited
+
+## Operators
+
+【25†operator ==】(【26†Object】other) → 【27†bool】 The equality operator. 
+
+inherited
+
+1.   【1†Flutter】
+2.   【2†flutter_gpu】
+3.   GpuImageSurface class
+
+##### flutter_gpu library
+
+1.   【28†Classes】
+2.   【29†BufferView】
+3.   【30†ColorAttachment】
+4.   【31†ColorBlendEquation】
+5.   【32†CommandBuffer】
+6.   【33†DepthRange】
+7.   【34†DepthStencilAttachment】
+8.   【35†DeviceBuffer】
+9.   【36†GpuContext】
+10.   【37†GpuImageSurface】
+11.   【19†GpuImageSurfaceFrame】
+12.   【9†GpuSurface】
+13.   【38†GpuSurfaceFrame】
+14.   【39†HostBuffer】
+15.   【40†RenderPass】
+16.   【41†RenderPipeline】
+17.   【42†RenderTarget】
+18.   【43†SamplerOptions】
+19.   【44†Scissor】
+20.   【45†Shader】
+21.   【46†ShaderLibrary】
+22.   【47†StencilConfig】
+23.   【48†Texture】
+24.   【49†TextureDestinationRegion】
+25.   【50†TextureRegion】
+26.   【51†UniformSlot】
+27.   【52†VertexAttribute】
+28.   【53†VertexBuffer】
+29.   【54†VertexLayout】
+30.   【55†Viewport】
+31.   【56†Enums】
+32.   【57†BlendFactor】
+33.   【58†BlendOperation】
+34.   【59†CompareFunction】
+35.   【60†CullMode】
+36.   【61†GpuPresentStatus】
+37.   【62†IndexType】
+38.   【63†LoadAction】
+39.   【64†MinMagFilter】
+40.   【65†MipFilter】
+41.   【13†PixelFormat】
+42.   【66†PolygonMode】
+43.   【67†PrimitiveType】
+44.   【68†SamplerAddressMode】
+45.   【69†ShaderStage】
+46.   【70†StencilFace】
+47.   【71†StencilOperation】
+48.   【72†StorageMode】
+49.   【73†StoreAction】
+50.   【74†TextureCompressionFamily】
+51.   【75†TextureType】
+52.   【76†VertexFormat】
+53.   【77†VertexStepMode】
+54.   【78†WindingOrder】
+55.   【79†Properties】
+56.   【80†gpuContext】
+57.   【81†Typedefs】
+58.   【82†CompletionCallback】
+59.   【83†Extensions】
+60.   【84†PixelFormatProperties】
+
+1.   【85†Properties】
+2.   【8†currentImage】
+3.   【10†debugBackingTextureCount】
+4.   【12†format】
+5.   【14†hashCode】
+6.   【15†height】
+7.   【16†runtimeType】
+8.   【18†width】
+9.   【86†Methods】
+10.   【5†acquireNextFrame】
+11.   【20†noSuchMethod】
+12.   【22†resize】
+13.   【23†toString】
+14.   【87†Operators】
+15.   【25†operator ==】
+
+Flutter 3.47.5 • 2026-09-18 13:06 • 6a19cca564 • stable Cookies management controls
+
+Links/Buttons:
+- [1](https://api.flutter.dev/flutter/index.html)
+- [2](https://api.flutter.dev/flutter/flutter_gpu/)
+- [3](https://dart.dev/language/class-modifiers#final)
+- [4](https://api.flutter.dev/flutter/dart-ui/Image-class.html)
+- [5](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface/acquireNextFrame.html)
+- [6](https://api.flutter.dev/flutter/flutter_gpu/GpuSurfaceFrame/colorTexture.html)
+- [7](https://api.flutter.dev/flutter/flutter_gpu/GpuSurfaceFrame/present.html)
+- [8](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface/currentImage.html)
+- [9](https://api.flutter.dev/flutter/flutter_gpu/GpuSurface-class.html)
+- [10](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface/debugBackingTextureCount.html)
+- [11](https://api.flutter.dev/flutter/dart-core/int-class.html)
+- [12](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface/format.html)
+- [13](https://api.flutter.dev/flutter/flutter_gpu/PixelFormat.html)
+- [14](https://api.flutter.dev/flutter/dart-core/Object/hashCode.html)
+- [15](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface/height.html)
+- [16](https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html)
+- [17](https://api.flutter.dev/flutter/dart-core/Type-class.html)
+- [18](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface/width.html)
+- [19](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurfaceFrame-class.html)
+- [20](https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html)
+- [21](https://api.flutter.dev/flutter/dart-core/Invocation-class.html)
+- [22](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface/resize.html)
+- [23](https://api.flutter.dev/flutter/dart-core/Object/toString.html)
+- [24](https://api.flutter.dev/flutter/dart-core/String-class.html)
+- [25](https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html)
+- [26](https://api.flutter.dev/flutter/dart-core/Object-class.html)
+- [27](https://api.flutter.dev/flutter/dart-core/bool-class.html)
+- [28](https://api.flutter.dev/flutter/flutter_gpu/#classes)
+- [29](https://api.flutter.dev/flutter/flutter_gpu/BufferView-class.html)
+- [30](https://api.flutter.dev/flutter/flutter_gpu/ColorAttachment-class.html)
+- [31](https://api.flutter.dev/flutter/flutter_gpu/ColorBlendEquation-class.html)
+- [32](https://api.flutter.dev/flutter/flutter_gpu/CommandBuffer-class.html)
+- [33](https://api.flutter.dev/flutter/flutter_gpu/DepthRange-class.html)
+- [34](https://api.flutter.dev/flutter/flutter_gpu/DepthStencilAttachment-class.html)
+- [35](https://api.flutter.dev/flutter/flutter_gpu/DeviceBuffer-class.html)
+- [36](https://api.flutter.dev/flutter/flutter_gpu/GpuContext-class.html)
+- [37](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface-class.html)
+- [38](https://api.flutter.dev/flutter/flutter_gpu/GpuSurfaceFrame-class.html)
+- [39](https://api.flutter.dev/flutter/flutter_gpu/HostBuffer-class.html)
+- [40](https://api.flutter.dev/flutter/flutter_gpu/RenderPass-class.html)
+- [41](https://api.flutter.dev/flutter/flutter_gpu/RenderPipeline-class.html)
+- [42](https://api.flutter.dev/flutter/flutter_gpu/RenderTarget-class.html)
+- [43](https://api.flutter.dev/flutter/flutter_gpu/SamplerOptions-class.html)
+- [44](https://api.flutter.dev/flutter/flutter_gpu/Scissor-class.html)
+- [45](https://api.flutter.dev/flutter/flutter_gpu/Shader-class.html)
+- [46](https://api.flutter.dev/flutter/flutter_gpu/ShaderLibrary-class.html)
+- [47](https://api.flutter.dev/flutter/flutter_gpu/StencilConfig-class.html)
+- [48](https://api.flutter.dev/flutter/flutter_gpu/Texture-class.html)
+- [49](https://api.flutter.dev/flutter/flutter_gpu/TextureDestinationRegion-class.html)
+- [50](https://api.flutter.dev/flutter/flutter_gpu/TextureRegion-class.html)
+- [51](https://api.flutter.dev/flutter/flutter_gpu/UniformSlot-class.html)
+- [52](https://api.flutter.dev/flutter/flutter_gpu/VertexAttribute-class.html)
+- [53](https://api.flutter.dev/flutter/flutter_gpu/VertexBuffer-class.html)
+- [54](https://api.flutter.dev/flutter/flutter_gpu/VertexLayout-class.html)
+- [55](https://api.flutter.dev/flutter/flutter_gpu/Viewport-class.html)
+- [56](https://api.flutter.dev/flutter/flutter_gpu/#enums)
+- [57](https://api.flutter.dev/flutter/flutter_gpu/BlendFactor.html)
+- [58](https://api.flutter.dev/flutter/flutter_gpu/BlendOperation.html)
+- [59](https://api.flutter.dev/flutter/flutter_gpu/CompareFunction.html)
+- [60](https://api.flutter.dev/flutter/flutter_gpu/CullMode.html)
+- [61](https://api.flutter.dev/flutter/flutter_gpu/GpuPresentStatus.html)
+- [62](https://api.flutter.dev/flutter/flutter_gpu/IndexType.html)
+- [63](https://api.flutter.dev/flutter/flutter_gpu/LoadAction.html)
+- [64](https://api.flutter.dev/flutter/flutter_gpu/MinMagFilter.html)
+- [65](https://api.flutter.dev/flutter/flutter_gpu/MipFilter.html)
+- [66](https://api.flutter.dev/flutter/flutter_gpu/PolygonMode.html)
+- [67](https://api.flutter.dev/flutter/flutter_gpu/PrimitiveType.html)
+- [68](https://api.flutter.dev/flutter/flutter_gpu/SamplerAddressMode.html)
+- [69](https://api.flutter.dev/flutter/flutter_gpu/ShaderStage.html)
+- [70](https://api.flutter.dev/flutter/flutter_gpu/StencilFace.html)
+- [71](https://api.flutter.dev/flutter/flutter_gpu/StencilOperation.html)
+- [72](https://api.flutter.dev/flutter/flutter_gpu/StorageMode.html)
+- [73](https://api.flutter.dev/flutter/flutter_gpu/StoreAction.html)
+- [74](https://api.flutter.dev/flutter/flutter_gpu/TextureCompressionFamily.html)
+- [75](https://api.flutter.dev/flutter/flutter_gpu/TextureType.html)
+- [76](https://api.flutter.dev/flutter/flutter_gpu/VertexFormat.html)
+- [77](https://api.flutter.dev/flutter/flutter_gpu/VertexStepMode.html)
+- [78](https://api.flutter.dev/flutter/flutter_gpu/WindingOrder.html)
+- [79](https://api.flutter.dev/flutter/flutter_gpu/#properties)
+- [80](https://api.flutter.dev/flutter/flutter_gpu/gpuContext.html)
+- [81](https://api.flutter.dev/flutter/flutter_gpu/#typedefs)
+- [82](https://api.flutter.dev/flutter/flutter_gpu/CompletionCallback.html)
+- [83](https://api.flutter.dev/flutter/flutter_gpu/#extensions)
+- [84](https://api.flutter.dev/flutter/flutter_gpu/PixelFormatProperties.html)
+- [85](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface-class.html#instance-properties)
+- [86](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface-class.html#instance-methods)
+- [87](https://api.flutter.dev/flutter/flutter_gpu/GpuImageSurface-class.html#operators)

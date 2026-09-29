@@ -1,0 +1,205 @@
+Title: Your first scene
+
+URL Source: https://fscene.dev/getting-started/your-first-scene/
+
+Markdown Content:
+【1†Skip to content】
+
+【2†Scene】
+
+Search Ctrl K
+
+ Cancel 
+
+【3†GitHub†github.com】
+
+*   
+Getting Started
+    *   【4†Welcome to Scene】
+    *   【5†Installation】
+    *   【6†Your first scene】
+    *   【7†Core concepts】
+
+*   
+Editor
+    *   【8†The Flutter Scene Editor】
+
+*   
+Guides
+    *   【9†Overview】
+    *   【10†Declarative scenes】
+    *   【11†Build a product configurator】
+    *   【12†Scene graph】
+    *   【13†Geometry】
+    *   【14†Materials】
+    *   【15†Custom materials】
+    *   【16†Lighting and environment】
+    *   【17†Post-processing】
+    *   【18†Cameras】
+    *   【19†Assets and loading】
+    *   【20†Animation】
+    *   【21†Picking and input】
+    *   【22†Widgets in the scene】
+
+*   
+Reference
+    *   【23†flutter_scene API reference】
+    *   【24†flutter_scene_rapier API reference】
+
+【3†GitHub†github.com】
+
+On this page
+
+*   【1†Overview】
+*   【25†The declarative version】
+    *   【26†What is happening】
+
+*   【27†The same scene, imperatively】
+*   【28†Warming up】
+*   【29†Next】
+
+## On this page
+
+*   【1†Overview】
+*   【25†The declarative version】
+    *   【26†What is happening】
+
+*   【27†The same scene, imperatively】
+*   【28†Warming up】
+*   【29†Next】
+
+# Your first scene
+
+This page builds a complete, runnable Flutter app that renders a spinning 3D cube with an orbiting camera. It uses only the engine’s built-in geometry and material, so there is no asset to load yet, and it builds the same scene twice, once with the declarative widget API and once with the imperative scene API, so you can see how the two styles relate.
+
+This is the scene you are about to build, running live in your browser.
+
+▶Run demo Loads a live Flutter Scene build
+
+A unit cube with debug face colors, spinning as the camera orbits.
+
+If you have not added the package, start with 【5†Installation】.
+
+## The declarative version
+
+【25†Section titled “The declarative version”】
+
+Copy this into `lib/main.dart` and run it. It is a whole Flutter app in one file, and the scene is described right in `build()`, the same way you describe UI.
+
+```
+import 'dart:math';
+import 'package:flutter/material.dart';import 'package:flutter_scene/scene.dart';import 'package:vector_math/vector_math.dart' as vm;
+void main() => runApp(const MyApp());
+class MyApp extends StatelessWidget {  const MyApp({super.key});
+  @override  Widget build(BuildContext context) {    return const MaterialApp(      home: Scaffold(body: FirstScene()),    );  }}
+class FirstScene extends StatelessWidget {  const FirstScene({super.key});
+  @override  Widget build(BuildContext context) {    return SceneView.declarative(      // The camera orbits the origin once per second.      cameraBuilder: (elapsed) {        final t = elapsed.inMicroseconds / 1e6;        return PerspectiveCamera(          position: vm.Vector3(sin(t) * 5, 2, cos(t) * 5),          target: vm.Vector3(0, 0, 0),        );      },      children: [        SceneNode(          components: [SpinComponent(1.5)],          children: [            SceneMesh(              geometry: CuboidGeometry(vm.Vector3(1, 1, 1), debugColors: true),              material: UnlitMaterial(),            ),          ],        ),      ],    );  }}
+class SpinComponent extends Component {  SpinComponent(this.radiansPerSecond);
+  final double radiansPerSecond;
+  // Runs once when the node joins a live scene, before the first update.  @override  void onMount() {    debugPrint('SpinComponent attached and driving its node');  }
+  // Runs every frame while mounted. deltaSeconds is the time since the  // previous tick, so motion stays framerate independent.  @override  void update(double deltaSeconds) {    node.localTransform.rotateY(radiansPerSecond * deltaSeconds);    node.markTransformDirty();  }
+  // Runs when the node leaves the scene. Release any resources here.  @override  void onUnmount() {    debugPrint('SpinComponent removed from the scene');  }}
+```
+
+Run it with the flags from 【5†Installation】.
+
+Terminal window
+
+`flutter run --enable-flutter-gpu   # nativeflutter run -d chrome              # web`
+
+You should see a multicolored cube spinning as the camera circles it.
+
+### What is happening
+
+【26†Section titled “What is happening”】
+
+*   **`SceneView.declarative`** renders a scene the view owns. The widgets in `children` describe its contents, and rebuilding with different children reconciles the scene the way Flutter reconciles UI, changed properties are applied to retained objects, added widgets attach nodes, removed widgets detach them. Hot reload works on scene structure too, so try changing the cube’s size and reloading.
+*   **`SceneNode`** declares a transform in the scene graph. Here it exists to carry the spin.
+*   **`SceneMesh`** pairs a `Geometry` (the shape) with a `Material` (the shading) on a node. The `debugColors` flag tints each face so the cube is easy to read without any lighting set up.
+*   **`SpinComponent`** is behavior attached to the node. It extends `Component` and overrides the lifecycle hooks the engine drives, `onMount` once when the node enters the scene, `update` every frame with the elapsed delta, and `onUnmount` when it leaves, all engine-side with no widget rebuilding involved. Components are how behavior works in both API styles, so this exact class reappears unchanged below.
+*   The **camera** is built fresh each frame from the elapsed time, so returning a position computed from `elapsed` animates the orbit with no manual timer.
+
+## The same scene, imperatively
+
+【27†Section titled “The same scene, imperatively”】
+
+The declarative widgets are a veneer over a retained scene graph you can also drive directly. Here is the identical scene built with the imperative API, again as a whole app you can paste into `lib/main.dart`. You construct a `Scene`, add nodes to it, and hand it to a `SceneView`. `MyApp` and `SpinComponent` are the same as in the declarative version, and only `FirstScene` changes, from a `StatelessWidget` that describes its children into a `StatefulWidget` that owns the `Scene`.
+
+```
+import 'dart:math';
+import 'package:flutter/material.dart';import 'package:flutter_scene/scene.dart';import 'package:vector_math/vector_math.dart' as vm;
+void main() => runApp(const MyApp());
+class MyApp extends StatelessWidget {  const MyApp({super.key});
+  @override  Widget build(BuildContext context) {    return const MaterialApp(      home: Scaffold(body: FirstScene()),    );  }}
+class FirstScene extends StatefulWidget {  const FirstScene({super.key});
+  @override  State<FirstScene> createState() => _FirstSceneState();}
+class _FirstSceneState extends State<FirstScene> {  // Constructing a Scene starts loading the engine's shared resources.  final Scene scene = Scene();
+  @override  void initState() {    super.initState();
+    final mesh = Mesh(      CuboidGeometry(vm.Vector3(1, 1, 1), debugColors: true),      UnlitMaterial(),    );    scene.add(Node(mesh: mesh)..addComponent(SpinComponent(1.5)));  }
+  @override  Widget build(BuildContext context) {    return SceneView(      scene,      cameraBuilder: (elapsed) {        final t = elapsed.inMicroseconds / 1e6;        return PerspectiveCamera(          position: vm.Vector3(sin(t) * 5, 2, cos(t) * 5),          target: vm.Vector3(0, 0, 0),        );      },    );  }}
+class SpinComponent extends Component {  SpinComponent(this.radiansPerSecond);
+  final double radiansPerSecond;
+  // Runs once when the node joins a live scene, before the first update.  @override  void onMount() {    debugPrint('SpinComponent attached and driving its node');  }
+  // Runs every frame while mounted. deltaSeconds is the time since the  // previous tick, so motion stays framerate independent.  @override  void update(double deltaSeconds) {    node.localTransform.rotateY(radiansPerSecond * deltaSeconds);    node.markTransformDirty();  }
+  // Runs when the node leaves the scene. Release any resources here.  @override  void onUnmount() {    debugPrint('SpinComponent removed from the scene');  }}
+```
+
+The pieces line up one to one. `SceneNode` and `SceneMesh` became a `Node` carrying a `Mesh`, added with `scene.add`, and the component attaches with `addComponent` instead of a `components` list. `SceneView` renders the scene your `State` owns instead of owning one itself.
+
+Behavior is identical either way, because it lives in the component, not the API style. `SpinComponent` overrides the lifecycle hooks the engine drives on the node, `onMount` for one-time setup when the node enters the scene, `update` every frame with the time delta, and `onUnmount` when it leaves. The engine calls them on the retained node directly, so a component keeps running as you add, move, and remove nodes at runtime, with no widget rebuild involved. `Component` also offers `onLoad` for asynchronous setup and `fixedUpdate` for behavior that must advance on the physics clock.
+
+Both styles are fully supported and they compose, a declarative subtree can mount inside an imperative scene and the other way around. Start declarative; reach for the imperative API when you are generating or restructuring scene content procedurally. 【7†Core concepts】 has guidance on choosing, and the 【10†Declarative scenes】 guide covers the widget layer in depth.
+
+## Warming up
+
+【28†Section titled “Warming up”】
+
+The first time the engine renders, it loads a few shared resources, such as shaders and a lookup texture. Until that finishes, `SceneView` skips frames and shows nothing. You do not have to manage this. Build your scene whenever you like and the content appears on its own once the engine is ready, usually within a frame or two.
+
+If you would rather show your own placeholder during that brief warm-up, give the view a `loadingBuilder`.
+
+`SceneView.declarative(  loadingBuilder: (context, progress) =>      const Center(child: CircularProgressIndicator()),  children: [...],)`
+
+A view with a `loadingBuilder` also waits for any declarative models in its children to finish loading before revealing the scene, so nothing pops in halfway. The 【19†Assets and loading】 guide covers loading screens and pipeline warm-up in depth.
+
+## Next
+
+【29†Section titled “Next”】
+
+*   【7†Core concepts】 explains the scene graph, components, cameras, and how to choose between the two styles.
+*   【10†Declarative scenes】 covers the widget layer in depth.
+*   【19†Assets and loading】 covers importing real glTF models instead of built-in shapes.
+*   【14†Materials】 and 【16†Lighting and environment】 cover lit, physically based shading.
+
+【5†Previous Installation】【7†Next Core concepts】
+
+Links/Buttons:
+- [1](https://fscene.dev/getting-started/your-first-scene/#_top)
+- [2](https://fscene.dev/)
+- [3](https://github.com/bdero/flutter_scene)
+- [4](https://fscene.dev/getting-started/)
+- [5](https://fscene.dev/getting-started/installation/)
+- [6](https://fscene.dev/getting-started/your-first-scene/)
+- [7](https://fscene.dev/getting-started/core-concepts/)
+- [8](https://fscene.dev/editor/)
+- [9](https://fscene.dev/guides/)
+- [10](https://fscene.dev/guides/declarative-scenes/)
+- [11](https://fscene.dev/guides/build-a-configurator/)
+- [12](https://fscene.dev/guides/scene-graph/)
+- [13](https://fscene.dev/guides/geometry/)
+- [14](https://fscene.dev/guides/materials/)
+- [15](https://fscene.dev/guides/custom-materials/)
+- [16](https://fscene.dev/guides/lighting-and-environment/)
+- [17](https://fscene.dev/guides/post-processing/)
+- [18](https://fscene.dev/guides/cameras/)
+- [19](https://fscene.dev/guides/assets-and-loading/)
+- [20](https://fscene.dev/guides/animation/)
+- [21](https://fscene.dev/guides/picking-and-input/)
+- [22](https://fscene.dev/guides/widgets/)
+- [23](https://fscene.dev/api/flutter_scene/latest/)
+- [24](https://fscene.dev/api/flutter_scene_rapier/latest/)
+- [25](https://fscene.dev/getting-started/your-first-scene/#the-declarative-version)
+- [26](https://fscene.dev/getting-started/your-first-scene/#what-is-happening)
+- [27](https://fscene.dev/getting-started/your-first-scene/#the-same-scene-imperatively)
+- [28](https://fscene.dev/getting-started/your-first-scene/#warming-up)
+- [29](https://fscene.dev/getting-started/your-first-scene/#next)

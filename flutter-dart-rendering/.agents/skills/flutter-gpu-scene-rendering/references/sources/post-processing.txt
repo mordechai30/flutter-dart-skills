@@ -1,0 +1,256 @@
+Title: Post-processing
+
+URL Source: https://fscene.dev/guides/post-processing/
+
+Markdown Content:
+【1†Skip to content】
+
+【2†Scene】
+
+Search Ctrl K
+
+ Cancel 
+
+【3†GitHub†github.com】
+
+*   
+Getting Started
+    *   【4†Welcome to Scene】
+    *   【5†Installation】
+    *   【6†Your first scene】
+    *   【7†Core concepts】
+
+*   
+Editor
+    *   【8†The Flutter Scene Editor】
+
+*   
+Guides
+    *   【9†Overview】
+    *   【10†Declarative scenes】
+    *   【11†Build a product configurator】
+    *   【12†Scene graph】
+    *   【13†Geometry】
+    *   【14†Materials】
+    *   【15†Custom materials】
+    *   【16†Lighting and environment】
+    *   【17†Post-processing】
+    *   【18†Cameras】
+    *   【19†Assets and loading】
+    *   【20†Animation】
+    *   【21†Picking and input】
+    *   【22†Widgets in the scene】
+
+*   
+Reference
+    *   【23†flutter_scene API reference】
+    *   【24†flutter_scene_rapier API reference】
+
+【3†GitHub†github.com】
+
+On this page
+
+*   【1†Overview】
+*   【25†Ambient occlusion】
+    *   【26†Screen-space global illumination】
+
+*   【27†Screen-space reflections】
+*   【28†Fog】
+*   【29†God rays】
+*   【30†Depth of field】
+*   【31†The post stack】
+    *   【32†Color grading】
+
+*   【33†Automatic exposure】
+*   【34†Anti-aliasing and render scale】
+*   【35†Custom effects】
+*   【36†Key API】
+
+## On this page
+
+*   【1†Overview】
+*   【25†Ambient occlusion】
+    *   【26†Screen-space global illumination】
+
+*   【27†Screen-space reflections】
+*   【28†Fog】
+*   【29†God rays】
+*   【30†Depth of field】
+*   【31†The post stack】
+    *   【32†Color grading】
+
+*   【33†Automatic exposure】
+*   【34†Anti-aliasing and render scale】
+*   【35†Custom effects】
+*   【36†Key API】
+
+# Post-processing
+
+Materials output linear HDR color into a floating-point scene target, and a chain of passes turns that into the final image. Some of those passes are screen-space lighting (occlusion, reflections, volumetrics), some are camera and film effects (depth of field, bloom, grain), and a final resolve applies exposure, the tone-mapping operator, and the display encoding. Every one of them is off by default, and each is a settings object hanging off the `Scene`.
+
+## Ambient occlusion
+
+【25†Section titled “Ambient occlusion”】
+
+`scene.ambientOcclusion` darkens creases and contact points that the image-based environment would otherwise fill in.
+
+`scene.ambientOcclusion  ..enabled = true  ..method = AmbientOcclusionMethod.groundTruth  ..radius = 0.5  ..intensity = 1.0;`
+
+Two estimators are available. `AmbientOcclusionMethod.obscurance` (the default) averages angular obscurance over a sampling disk and is the cheaper of the two. `AmbientOcclusionMethod.groundTruth` integrates horizon visibility over hemisphere slices, which reads as more coherent contact shadowing at similar cost and composes correctly with image-based lighting.
+
+`bentNormals` steers the diffuse environment lookup toward the unoccluded direction, `specularMode` extends the occlusion to indirect specular, and `halfResolution` (on by default) trades resolution for cost.
+
+### Screen-space global illumination
+
+【26†Section titled “Screen-space global illumination”】
+
+`indirectLight` turns the ground-truth occlusion march into a one-bounce color bleed, crediting radiance from the previous frame’s scene color to each newly visible sector, so lit surfaces tint their neighbors.
+
+`scene.ambientOcclusion  ..enabled = true  ..method = AmbientOcclusionMethod.groundTruth  ..visibilityBitmask = true  ..indirectLight = 1.0;`
+
+It requires `groundTruth` with `visibilityBitmask`, and while active the sun’s contact shadows are unavailable, since those channels carry radiance instead.
+
+## Screen-space reflections
+
+【27†Section titled “Screen-space reflections”】
+
+`scene.screenSpaceReflections` traces the rendered image to add reflections to glossy surfaces, on top of what the environment map already provides.
+
+`scene.screenSpaceReflections  ..enabled = true  ..intensity = 1.0  ..maxDistance = 24.0  ..resolutionScale = 0.5; // trace at half res`
+
+Reflections only contain what is on screen, so surfaces facing away from the camera fall back to the environment. `blur` widens the trace with roughness, and `distanceFadeStart` fades the effect out toward the trace limit.
+
+## Fog
+
+【28†Section titled “Fog”】
+
+`scene.fog` blends distant geometry toward a color, either as a distance falloff or as a height-based layer.
+
+`scene.fog  ..enabled = true  ..mode = FogMode.exponential  ..color = vm.Vector3(0.6, 0.7, 0.8)  ..density = 0.02;`
+
+`FogMode.linear`, `exponential`, and `exponentialSquared` pick the falloff curve (`start`/`end` drive the linear one). `skyColorInfluence` tints the fog from the sky instead of a fixed color, `height` and `heightFalloff` turn it into a ground layer, and `sunInScatter` brightens it toward the sun.
+
+## God rays
+
+【29†Section titled “God rays”】
+
+`scene.godRays` adds volumetric shafts through the directional light, ray-marched against the shadow map.
+
+`scene.godRays  ..enabled = true  ..intensity = 1.0  ..density = 0.5;`
+
+`stepCount` and `maxDistance` set the march, and `anisotropy` controls how strongly the scattering points toward the light.
+
+## Depth of field
+
+【30†Section titled “Depth of field”】
+
+`scene.depthOfField` blurs by circle of confusion, with a physical lens model.
+
+`scene.depthOfField  ..enabled = true  ..focusDistance = 10.0 // world units  ..fStop = 2.8  ..quality = DepthOfFieldQuality.medium;`
+
+`focalLength` and `sensorHeight` complete the lens (a zero `focalLength` derives it from the camera’s field of view). `bladeCount`, `bladeRotation`, and `bladeCurvature` shape the bokeh into a polygonal aperture instead of a circle.
+
+## The post stack
+
+【31†Section titled “The post stack”】
+
+`scene.postProcess` groups the film effects that run over the resolved image.
+
+```
+scene.postProcess.bloom  ..enabled = true  ..threshold = 1.0  ..intensity = 0.15;
+scene.postProcess.vignette  ..enabled = true  ..intensity = 0.5  ..radius = 0.75;
+scene.postProcess.filmGrain..enabled = true;scene.postProcess.chromaticAberration..enabled = true;
+```
+
+Bloom is what makes HDR emission read as glow, so a material with an `emissiveFactor` above `1.0` blooms once this is on.
+
+### Color grading
+
+【32†Section titled “Color grading”】
+
+`colorGrading` carries both the primary controls and a 3D lookup table.
+
+```
+scene.postProcess.colorGrading  ..enabled = true  ..contrast = 1.1  ..saturation = 0.9  ..temperature = 0.15;
+// Or grade through a .cube LUT authored in a color tool.scene.postProcess.colorGrading  ..enabled = true  ..lut = await ColorLut.fromCubeAsset('assets/look.cube')  ..lutBlend = 0.8;
+```
+
+## Automatic exposure
+
+【33†Section titled “Automatic exposure”】
+
+Exposure and tone mapping are the last stage of the chain and are covered in 【37†Lighting and environment】, including `scene.autoExposure` for scenes whose brightness varies.
+
+## Anti-aliasing and render scale
+
+【34†Section titled “Anti-aliasing and render scale”】
+
+`scene.antiAliasingMode` picks between `AntiAliasingMode.msaa` (4x, highest quality for geometry edges, unsupported on some backends), `fxaa` (a post pass, supported everywhere), `none`, and `auto`, which is the default and takes MSAA where it is available. Read `effectiveAntiAliasingMode` for what actually runs.
+
+`scene.renderScale` renders the scene at a fraction of the view’s resolution and upscales, the usual first knob for a GPU-bound scene. `RenderView.renderScale` overrides it per view.
+
+## Custom effects
+
+【35†Section titled “Custom effects”】
+
+`PostEffect` is the post-processing counterpart of `ShaderMaterial`. Author a fragment shader, compile it through the `flutter_gpu_shaders` build hook, and add it to the stack.
+
+`scene.postProcess.customEffects.add(  PostEffect(    fragmentShader: shader,    insertion: PostInsertion.afterTonemap,  ),);`
+
+The engine binds the current color to a `sampler2D input_color` sampled at the `v_uv` varying. `PostInsertion.beforeTonemap` runs on linear HDR (and must output linear HDR premultiplied by alpha, the same contract materials follow), while `afterTonemap` works on the display-referred image. Declare your own uniform blocks and textures and set them by name with `setUniformBlock` and `setTexture`.
+
+## Key API
+
+【36†Section titled “Key API”】
+
+【38†`AmbientOcclusionSettings`】, 【39†`ScreenSpaceReflectionsSettings`】, 【40†`Fog`】, 【41†`GodRaysSettings`】, 【42†`DepthOfField`】, 【43†`PostProcessSettings`】, 【44†`ColorLut`】, 【45†`AntiAliasingMode`】, and 【46†`PostEffect`】.
+
+【16†Previous Lighting and environment】【18†Next Cameras】
+
+Links/Buttons:
+- [1](https://fscene.dev/guides/post-processing/#_top)
+- [2](https://fscene.dev/)
+- [3](https://github.com/bdero/flutter_scene)
+- [4](https://fscene.dev/getting-started/)
+- [5](https://fscene.dev/getting-started/installation/)
+- [6](https://fscene.dev/getting-started/your-first-scene/)
+- [7](https://fscene.dev/getting-started/core-concepts/)
+- [8](https://fscene.dev/editor/)
+- [9](https://fscene.dev/guides/)
+- [10](https://fscene.dev/guides/declarative-scenes/)
+- [11](https://fscene.dev/guides/build-a-configurator/)
+- [12](https://fscene.dev/guides/scene-graph/)
+- [13](https://fscene.dev/guides/geometry/)
+- [14](https://fscene.dev/guides/materials/)
+- [15](https://fscene.dev/guides/custom-materials/)
+- [16](https://fscene.dev/guides/lighting-and-environment/)
+- [17](https://fscene.dev/guides/post-processing/)
+- [18](https://fscene.dev/guides/cameras/)
+- [19](https://fscene.dev/guides/assets-and-loading/)
+- [20](https://fscene.dev/guides/animation/)
+- [21](https://fscene.dev/guides/picking-and-input/)
+- [22](https://fscene.dev/guides/widgets/)
+- [23](https://fscene.dev/api/flutter_scene/latest/)
+- [24](https://fscene.dev/api/flutter_scene_rapier/latest/)
+- [25](https://fscene.dev/guides/post-processing/#ambient-occlusion)
+- [26](https://fscene.dev/guides/post-processing/#screen-space-global-illumination)
+- [27](https://fscene.dev/guides/post-processing/#screen-space-reflections)
+- [28](https://fscene.dev/guides/post-processing/#fog)
+- [29](https://fscene.dev/guides/post-processing/#god-rays)
+- [30](https://fscene.dev/guides/post-processing/#depth-of-field)
+- [31](https://fscene.dev/guides/post-processing/#the-post-stack)
+- [32](https://fscene.dev/guides/post-processing/#color-grading)
+- [33](https://fscene.dev/guides/post-processing/#automatic-exposure)
+- [34](https://fscene.dev/guides/post-processing/#anti-aliasing-and-render-scale)
+- [35](https://fscene.dev/guides/post-processing/#custom-effects)
+- [36](https://fscene.dev/guides/post-processing/#key-api)
+- [37](https://fscene.dev/guides/lighting-and-environment/#exposure-and-tone-mapping)
+- [38](https://fscene.dev/api/flutter_scene/latest/scene/AmbientOcclusionSettings-class.html)
+- [39](https://fscene.dev/api/flutter_scene/latest/scene/ScreenSpaceReflectionsSettings-class.html)
+- [40](https://fscene.dev/api/flutter_scene/latest/scene/Fog-class.html)
+- [41](https://fscene.dev/api/flutter_scene/latest/scene/GodRaysSettings-class.html)
+- [42](https://fscene.dev/api/flutter_scene/latest/scene/DepthOfField-class.html)
+- [43](https://fscene.dev/api/flutter_scene/latest/scene/PostProcessSettings-class.html)
+- [44](https://fscene.dev/api/flutter_scene/latest/scene/ColorLut-class.html)
+- [45](https://fscene.dev/api/flutter_scene/latest/scene/AntiAliasingMode.html)
+- [46](https://fscene.dev/api/flutter_scene/latest/scene/PostEffect-class.html)

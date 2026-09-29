@@ -1,0 +1,284 @@
+Title: Installation
+
+URL Source: https://fscene.dev/getting-started/installation/
+
+Markdown Content:
+【1†Skip to content】
+
+【2†Scene】
+
+Search Ctrl K
+
+ Cancel 
+
+【3†GitHub†github.com】
+
+*   
+Getting Started
+    *   【4†Welcome to Scene】
+    *   【5†Installation】
+    *   【6†Your first scene】
+    *   【7†Core concepts】
+
+*   
+Editor
+    *   【8†The Flutter Scene Editor】
+
+*   
+Guides
+    *   【9†Overview】
+    *   【10†Declarative scenes】
+    *   【11†Build a product configurator】
+    *   【12†Scene graph】
+    *   【13†Geometry】
+    *   【14†Materials】
+    *   【15†Custom materials】
+    *   【16†Lighting and environment】
+    *   【17†Post-processing】
+    *   【18†Cameras】
+    *   【19†Assets and loading】
+    *   【20†Animation】
+    *   【21†Picking and input】
+    *   【22†Widgets in the scene】
+
+*   
+Reference
+    *   【23†flutter_scene API reference】
+    *   【24†flutter_scene_rapier API reference】
+
+【3†GitHub†github.com】
+
+On this page
+
+*   【1†Overview】
+*   【25†Requirements】
+*   【26†Enable Flutter GPU】
+    *   【27†iOS】
+    *   【28†Android】
+    *   【29†macOS】
+    *   【30†Windows and Linux】
+
+*   【31†Add the package】
+*   【32†Set up the asset pipeline】
+    *   【33†Why convert ahead of time】
+
+*   【34†Import a model at runtime】
+*   【35†Run】
+*   【36†Next】
+
+## On this page
+
+*   【1†Overview】
+*   【25†Requirements】
+*   【26†Enable Flutter GPU】
+    *   【27†iOS】
+    *   【28†Android】
+    *   【29†macOS】
+    *   【30†Windows and Linux】
+
+*   【31†Add the package】
+*   【32†Set up the asset pipeline】
+    *   【33†Why convert ahead of time】
+
+*   【34†Import a model at runtime】
+*   【35†Run】
+*   【36†Next】
+
+# Installation
+
+## Requirements
+
+【25†Section titled “Requirements”】
+
+Flutter Scene needs Flutter 3.47 (stable) or newer. That is the first stable release carrying the 【37†Flutter GPU†github.com】 support the package builds on.
+
+| Platform | Status |
+| --- | --- |
+| iOS | Supported |
+| Android | Supported |
+| Web | Supported |
+| macOS | Supported |
+| Windows | Supported |
+| Linux | Supported |
+
+Every platform except the web renders through 【38†Impeller†docs.flutter.dev】 and Flutter GPU. Impeller is the default renderer everywhere as of 3.47, so the only thing to turn on is Flutter GPU, once per platform. The web has no Impeller and needs nothing, since the package ships its own WebGL2 backend and runs under both the CanvasKit and Skwasm renderers.
+
+## Enable Flutter GPU
+
+【26†Section titled “Enable Flutter GPU”】
+
+While developing, pass the flag on the command line. This works on every native platform and needs no project changes.
+
+Terminal window
+
+`flutter run --enable-flutter-gpu`
+
+To turn it on permanently, so it applies to every run and to the app you ship, edit the platform file below. Do this for each platform you target.
+
+### iOS
+
+【27†Section titled “iOS”】
+
+In `ios/Runner/Info.plist`, inside the top-level `<dict>`:
+
+`<key>FLTEnableFlutterGPU</key><true/>`
+
+### Android
+
+【28†Section titled “Android”】
+
+In `android/app/src/main/AndroidManifest.xml`, inside `<application>`:
+
+`<meta-data    android:name="io.flutter.embedding.android.EnableFlutterGPU"    android:value="true" />`
+
+### macOS
+
+【29†Section titled “macOS”】
+
+In `macos/Runner/Info.plist`, inside the top-level `<dict>`:
+
+`<key>FLTEnableFlutterGPU</key><true/>`
+
+### Windows and Linux
+
+【30†Section titled “Windows and Linux”】
+
+These two gained a project-level setting in Flutter 3.47.1. Set it on the `DartProject` your runner builds.
+
+On Linux, in `linux/runner/my_application.cc`, just after the project is created:
+
+`g_autoptr(FlDartProject) project = fl_dart_project_new();fl_dart_project_set_enable_flutter_gpu(project, TRUE);`
+
+On Windows, in `windows/runner/main.cpp`, just after the project is created:
+
+`flutter::DartProject project(L"data");project.set_enable_flutter_gpu(true);`
+
+#### On 3.47.0
+
+【39†Section titled “On 3.47.0”】
+
+3.47.0 has no such setting, so Flutter GPU is enabled per run instead.
+
+Terminal window
+
+`flutter run --enable-flutter-gpu`
+
+For a debug or profile build launched outside `flutter run`, set the engine switches in the environment:
+
+Terminal window
+
+`FLUTTER_ENGINE_SWITCHES=1 \FLUTTER_ENGINE_SWITCH_1=enable-flutter-gpu \  ./my_app`
+
+Release builds compile the environment switches out, so a shipped Windows or Linux release needs 3.47.1.
+
+## Add the package
+
+【31†Section titled “Add the package”】
+
+Terminal window
+
+`flutter pub add flutter_scene`
+
+## Set up the asset pipeline
+
+【32†Section titled “Set up the asset pipeline”】
+
+Run this once from your project root. It is the recommended way to use Scene, and what the rest of the docs assume.
+
+Terminal window
+
+`dart run flutter_scene:init`
+
+`init` writes a `hook/build.dart` that converts your assets at build time, creates `flutter_scene_generated/` with a `.gitignore` for its outputs, and adds that one directory to `flutter.assets` in your `pubspec.yaml`. It is safe to run again, and it will not overwrite a `hook/build.dart` you wrote yourself. It prints a block to paste into your existing `build()` callback instead.
+
+The generated hook discovers `.glb` and `.fscene` models, `.fmat` materials, and loose images under `assets/`, and converts each one.
+
+```
+import 'package:flutter_scene/build_hooks.dart';import 'package:hooks/hooks.dart';
+void main(List<String> args) async {  await build(args, (input, output) async {    buildScenes(buildInput: input, buildOutput: output);    await buildMaterials(buildInput: input, buildOutput: output);  });}
+```
+
+Drop sources under `assets/` and load them by their source path.
+
+`final level = await loadScene('assets/level.glb'); // built from the .glbfinal toon = await loadFmatMaterial('assets/toon.fmat'); // built from the .fmatfinal ground = await loadTexture('assets/ground.png'); // built from the image`
+
+### Why convert ahead of time
+
+【33†Section titled “Why convert ahead of time”】
+
+A `.glb` has to be parsed and unpacked into GPU-ready form every time the app loads it. The pipeline does that work once, at build time, into the `.fsceneb` format the engine reads directly, so loading a model at runtime costs far less. Prefer it for anything that ships with your app.
+
+It is also how the rest of the toolkit reaches you. `.fmat` custom materials are the supported way to write your own shaders (see 【14†Materials】), textures arrive block-compressed with full mip chains, and editing any source reconverts just that source and hot reloads it into the running app.
+
+Keep your sources in version control. The generated directory holds compiled output tied to the Flutter engine that built it, which is why the hook manages its `.gitignore` for you.
+
+## Import a model at runtime
+
+【34†Section titled “Import a model at runtime”】
+
+When a model is not available at build time, because you download it or the user supplies it, import the `.glb` directly.
+
+`final model = await Node.fromGlbAsset('assets/model.glb');scene.add(model);`
+
+This needs no hook and no configuration, which also makes it the quickest way to try Scene. It parses the glTF on every load, so reach for the pipeline above once the model ships with your app.
+
+## Run
+
+【35†Section titled “Run”】
+
+On the web, no flags are needed.
+
+Terminal window
+
+`flutter run -d chrome`
+
+Add `--wasm` to run under the Skwasm renderer. On native platforms, run with the flags from 【26†Enable Flutter GPU】 above.
+
+## Next
+
+【36†Section titled “Next”】
+
+Continue to 【6†Your first scene】 to render something on screen.
+
+【4†Previous Welcome to Scene】【6†Next Your first scene】
+
+Links/Buttons:
+- [1](https://fscene.dev/getting-started/installation/#_top)
+- [2](https://fscene.dev/)
+- [3](https://github.com/bdero/flutter_scene)
+- [4](https://fscene.dev/getting-started/)
+- [5](https://fscene.dev/getting-started/installation/)
+- [6](https://fscene.dev/getting-started/your-first-scene/)
+- [7](https://fscene.dev/getting-started/core-concepts/)
+- [8](https://fscene.dev/editor/)
+- [9](https://fscene.dev/guides/)
+- [10](https://fscene.dev/guides/declarative-scenes/)
+- [11](https://fscene.dev/guides/build-a-configurator/)
+- [12](https://fscene.dev/guides/scene-graph/)
+- [13](https://fscene.dev/guides/geometry/)
+- [14](https://fscene.dev/guides/materials/)
+- [15](https://fscene.dev/guides/custom-materials/)
+- [16](https://fscene.dev/guides/lighting-and-environment/)
+- [17](https://fscene.dev/guides/post-processing/)
+- [18](https://fscene.dev/guides/cameras/)
+- [19](https://fscene.dev/guides/assets-and-loading/)
+- [20](https://fscene.dev/guides/animation/)
+- [21](https://fscene.dev/guides/picking-and-input/)
+- [22](https://fscene.dev/guides/widgets/)
+- [23](https://fscene.dev/api/flutter_scene/latest/)
+- [24](https://fscene.dev/api/flutter_scene_rapier/latest/)
+- [25](https://fscene.dev/getting-started/installation/#requirements)
+- [26](https://fscene.dev/getting-started/installation/#enable-flutter-gpu)
+- [27](https://fscene.dev/getting-started/installation/#ios)
+- [28](https://fscene.dev/getting-started/installation/#android)
+- [29](https://fscene.dev/getting-started/installation/#macos)
+- [30](https://fscene.dev/getting-started/installation/#windows-and-linux)
+- [31](https://fscene.dev/getting-started/installation/#add-the-package)
+- [32](https://fscene.dev/getting-started/installation/#set-up-the-asset-pipeline)
+- [33](https://fscene.dev/getting-started/installation/#why-convert-ahead-of-time)
+- [34](https://fscene.dev/getting-started/installation/#import-a-model-at-runtime)
+- [35](https://fscene.dev/getting-started/installation/#run)
+- [36](https://fscene.dev/getting-started/installation/#next)
+- [37](https://github.com/flutter/flutter/blob/main/docs/engine/impeller/Flutter-GPU.md)
+- [38](https://docs.flutter.dev/perf/impeller)
+- [39](https://fscene.dev/getting-started/installation/#on-3470)

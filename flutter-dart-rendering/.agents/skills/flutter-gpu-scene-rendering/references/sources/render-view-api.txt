@@ -1,0 +1,694 @@
+Title: RenderView class - scene library
+
+URL Source: https://fscene.dev/api/flutter_scene/latest/scene/RenderView-class.html
+
+Markdown Content:
+menu
+1.   【1†flutter_scene】
+2.   【2†scene.dart】
+3.   RenderView class
+
+RenderView
+
+ dark_mode  light_mode 
+
+# RenderView class
+
+One view of a `Scene`: a 【3†camera】 plus where and how its image is drawn.
+
+A scene can be rendered as a list of views (split-screen, picture-in- picture, and more). Each view binds a camera to a 【4†target】 (an offscreen 【5†RenderTexture】, or null for the screen), a 【6†viewport】 sub-rectangle of the target, a 【7†layerMask】 selecting which nodes it sees, an 【8†order】 controlling how overlapping views composite, and an optional 【9†antiAliasingMode】 override.
+
+## Constructors
+
+【10†RenderView】({required【11†Camera】camera, 【5†RenderTexture】?target, 【12†Rect†api.flutter.dev】?viewport, 【13†int†api.flutter.dev】layerMask = kRenderLayerAll, 【13†int†api.flutter.dev】order = 0, 【14†AntiAliasingMode】?antiAliasingMode, 【15†double†api.flutter.dev】?renderScale, 【16†FilterQuality†api.flutter.dev】?filterQuality, 【17†List†api.flutter.dev】<【18†Plane†pub.dev】>cullingPlanes = const []}) Creates a render view for `camera`. 
+## Properties
+
+【9†antiAliasingMode】↔ 【14†AntiAliasingMode】? The anti-aliasing strategy for this view, or null (the default) to inherit the scene's `Scene.antiAliasingMode`. 
+
+getter/setter pair
+
+【3†camera】↔ 【11†Camera】 The camera whose view and projection this view renders. 
+
+getter/setter pair
+
+【19†cullingPlanes】↔ 【17†List†api.flutter.dev】<【18†Plane†pub.dev】> Extra world-space planes used to reject bounded objects before drawing. 
+
+getter/setter pair
+
+【20†filterQuality】↔ 【16†FilterQuality†api.flutter.dev】? The sampling quality this view's image is composited onto the canvas with, or null (the default) to inherit the scene's `Scene.filterQuality` (which documents how the values map to concrete sampling modes per backend). 
+
+getter/setter pair
+
+【21†hashCode†api.flutter.dev】→ 【13†int†api.flutter.dev】 The hash code for this object. 
+
+no setter inherited
+
+【7†layerMask】↔ 【13†int†api.flutter.dev】 A bitmask selecting which `Node` layers this view renders. A node is drawn only when `node.layers & layerMask != 0`. Defaults to 【22†kRenderLayerAll】 (every layer). 
+
+getter/setter pair
+
+【8†order】↔ 【13†int†api.flutter.dev】 The compositing order among views sharing a target: a lower 【8†order】 renders first, a higher one draws on top. 
+
+getter/setter pair
+
+【23†renderScale】↔ 【15†double†api.flutter.dev】? Scales the resolution this view renders at relative to the display's native resolution, or null (the default) to inherit the scene's `Scene.renderScale`. 
+
+getter/setter pair
+
+【24†runtimeType†api.flutter.dev】→ 【25†Type†api.flutter.dev】 A representation of the runtime type of the object. 
+
+no setter inherited
+
+【4†target】↔ 【5†RenderTexture】? The offscreen texture this view renders into, or null to render to the screen. 
+
+getter/setter pair
+
+【6†viewport】↔ 【12†Rect†api.flutter.dev】? The sub-rectangle of the render target this view draws into, in normalized coordinates (`0..1`, with a top-left origin). `null` fills the whole target. 
+
+getter/setter pair
+
+## Methods
+
+【26†noSuchMethod†api.flutter.dev】(【27†Invocation†api.flutter.dev】invocation) → dynamic Invoked when a nonexistent method or property is accessed. 
+
+inherited
+
+【28†toString†api.flutter.dev】() → 【29†String†api.flutter.dev】 A string representation of this object. 
+
+inherited
+
+## Operators
+
+【30†operator ==†api.flutter.dev】(【31†Object†api.flutter.dev】other) → 【32†bool†api.flutter.dev】 The equality operator. 
+
+inherited
+
+Version 
+1.   【1†flutter_scene】
+2.   【2†scene】
+3.   RenderView class
+
+##### scene library
+
+1.   【33†Classes】
+2.   【34†AccelerationModule】
+3.   【35†AmbientOcclusionSettings】
+4.   【36†Animation】
+5.   【37†AnimationClip】
+6.   【38†AnimationPlayer】
+7.   【39†AssetModelSource】
+8.   【40†AutoExposureSettings】
+9.   【41†BezierPath】
+10.   【42†BillboardGeometry】
+11.   【43†BloomSettings】
+12.   【44†BoxEmitterShape】
+13.   【45†BoxVolumeBounds】
+14.   【11†Camera】
+15.   【46†CameraComponent】
+16.   【47†CameraController】
+17.   【48†CameraControls】
+18.   【49†CameraProjection】
+19.   【50†CapsuleGeometry】
+20.   【51†CapturedPass】
+21.   【52†CapturedResource】
+22.   【53†CatmullRomPath】
+23.   【54†ChromaticAberrationSettings】
+24.   【55†ColorDistribution】
+25.   【56†ColorGradient】
+26.   【57†ColorGradingSettings】
+27.   【58†ColorLut】
+28.   【59†ColorOverLifeModule】
+29.   【60†ColorStop】
+30.   【61†Component】
+31.   【62†ConeEmitterShape】
+32.   【63†ConstantColor】
+33.   【64†ConstantFloat】
+34.   【65†CuboidGeometry】
+35.   【66†CurveFloat】
+36.   【67†CustomRenderPass】
+37.   【68†CylinderGeometry】
+38.   【69†DashPattern】
+39.   【70†DecodedHdr】
+40.   【71†DepthOfField】
+41.   【72†DirectionalLight】
+42.   【73†DirectionalLightComponent】
+43.   【74†DiscGeometry】
+44.   【75†EmitterShape】
+45.   【76†EnvironmentMap】
+46.   【77†EnvironmentSettings】
+47.   【78†EnvironmentSkySource】
+48.   【79†EnvironmentVolume】
+49.   【80†EnvironmentVolumeBounds】
+50.   【81†EnvironmentVolumeComponent】
+51.   【82†ExtrudeGeometry】
+52.   【83†FilmGrainSettings】
+53.   【84†FlipbookModule】
+54.   【85†FloatDistribution】
+55.   【86†FlyCameraController】
+56.   【87†FmatMaterialRegistry】
+57.   【88†Fog】
+58.   【89†FollowCameraController】
+59.   【90†GaussianSplats】
+60.   【91†Geometry】
+61.   【92†GeometryBufferArena】
+62.   【93†GeometryBuilder】
+63.   【94†GodRaysSettings】
+64.   【95†GpuTextureSource】
+65.   【96†GradientColor】
+66.   【97†GradientSkySource】
+67.   【98†HighlightStyle】
+68.   【99†IcosphereGeometry】
+69.   【100†InstancedMesh】
+70.   【101†InstancedMeshComponent】
+71.   【102†Lighting】
+72.   【103†LinearDragModule】
+73.   【104†LineSegmentData】
+74.   【105†LineSegmentsGeometry】
+75.   【106†LodComponent】
+76.   【107†LodLevel】
+77.   【108†Material】
+78.   【109†MaterialParameters】
+79.   【110†MaterialsVariantsComponent】
+80.   【111†MemoryCategory】
+81.   【112†MemoryModelSource】
+82.   【113†MemoryReport】
+83.   【114†Mesh】
+84.   【115†MeshAttributeData】
+85.   【116†MeshComponent】
+86.   【117†MeshData】
+87.   【118†MeshGeometry】
+88.   【119†MeshParticleEmitterComponent】
+89.   【120†MeshPrimitive】
+90.   【121†MeshTriangle】
+91.   【122†Node】
+92.   【123†NodeCamera】
+93.   【124†NodeFilter】
+94.   【125†OrbitCameraController】
+95.   【126†ParticleBurst】
+96.   【127†ParticleCurve】
+97.   【128†ParticleEmitterComponent】
+98.   【129†ParticleKeyframe】
+99.   【130†ParticleModule】
+100.   【131†ParticleStorage】
+101.   【132†ParticleSystem】
+102.   【133†PerspectiveCamera】
+103.   【134†PerspectiveProjection】
+104.   【135†PhysicallyBasedMaterial】
+105.   【136†PhysicalSkySource】
+106.   【137†PlaneGeometry】
+107.   【138†PointEmitterShape】
+108.   【139†PointLight】
+109.   【140†PointLightComponent】
+110.   【141†PolylineGeometry】
+111.   【142†PolylinePath】
+112.   【143†PostEffect】
+113.   【144†PostProcessSettings】
+114.   【145†PreprocessedMaterial】
+115.   【146†PreprocessedSky】
+116.   【147†RectAreaLight】
+117.   【148†RectAreaLightComponent】
+118.   【149†RenderGraphCaptureRequest】
+119.   【150†RenderGraphCaptureResult】
+120.   【151†RenderPassContext】
+121.   【5†RenderTexture】
+122.   【152†RenderTextureSampling】
+123.   【153†RenderTextureUpdate】
+124.   【154†RenderTextureView】
+125.   【155†RenderView】
+126.   【156†ResourceGroup】
+127.   【157†RibbonGeometry】
+128.   【158†RingGeometry】
+129.   【159†RotationModule】
+130.   【160†Scene】
+131.   【161†SceneAnimationSpec】
+132.   【162†SceneMesh】
+133.   【163†SceneModel】
+134.   【164†SceneModelSource】
+135.   【165†SceneNode】
+136.   【166†SceneNodeController】
+137.   【167†SceneNodeHost】
+138.   【168†ScenePath】
+139.   【169†ScenePathFrame】
+140.   【170†ScenePointer】
+141.   【171†SceneRaycastHit】
+142.   【172†SceneRegistry】
+143.   【173†SceneScope】
+144.   【174†SceneSubtree】
+145.   【175†SceneView】
+146.   【176†ScreenSpaceReflectionsSettings】
+147.   【177†SemanticsComponent】
+148.   【178†ShaderMaterial】
+149.   【179†ShaderSkySource】
+150.   【180†ShadowCascade】
+151.   【181†SizeOverLifeModule】
+152.   【182†Skin】
+153.   【183†SkinnedGeometry】
+154.   【184†Skybox】
+155.   【185†SkyEnvironment】
+156.   【186†SkySource】
+157.   【187†Spawner】
+158.   【188†SphereEmitterShape】
+159.   【189†SphereGeometry】
+160.   【190†SphereVolumeBounds】
+161.   【191†SplatComponent】
+162.   【192†SplatData】
+163.   【193†SpotLight】
+164.   【194†SpotLightComponent】
+165.   【195†Sprite】
+166.   【196†SpriteMaterial】
+167.   【197†SunLight】
+168.   【198†SunSky】
+169.   【199†Surface】
+170.   【200†Texture2D】
+171.   【201†TextureAtlas】
+172.   【202†TextureSampling】
+173.   【203†TextureSource】
+174.   【204†TextureTransform】
+175.   【205†TorusGeometry】
+176.   【206†TrailComponent】
+177.   【207†TransientWriter】
+178.   【208†TubeGeometry】
+179.   【209†TurbulenceModule】
+180.   【210†UniformColor】
+181.   【211†UniformCurveFloat】
+182.   【212†UniformFloat】
+183.   【213†UnlitMaterial】
+184.   【214†UnskinnedGeometry】
+185.   【215†VertexAttributeDescriptor】
+186.   【216†VertexBufferDescriptor】
+187.   【217†VertexLayoutDescriptor】
+188.   【218†VignetteSettings】
+189.   【219†WedgeGeometry】
+190.   【220†WidgetComponent】
+191.   【221†WidgetTexture】
+192.   【222†WidgetTextureController】
+193.   【223†WidgetUpdatePolicy】
+194.   【224†Enums】
+195.   【225†AlphaMode】
+196.   【226†AmbientOcclusionMethod】
+197.   【14†AntiAliasingMode】
+198.   【227†BillboardFacing】
+199.   【228†DepthOfFieldQuality】
+200.   【229†DirectionalShadowFilter】
+201.   【230†EnvironmentVolumeShape】
+202.   【231†EquirectImageFormat】
+203.   【232†FogMode】
+204.   【233†GeometryStorage】
+205.   【234†MeshParticleFacing】
+206.   【235†MeshVariant】
+207.   【236†PolylineCap】
+208.   【237†PolylineWidthMode】
+209.   【238†PostInsertion】
+210.   【239†RenderInput】
+211.   【240†RenderStage】
+212.   【241†RibbonAlignment】
+213.   【242†ShaderStage】
+214.   【243†ShadowCasterFaces】
+215.   【244†SkyEnvironmentRefresh】
+216.   【245†SpecularAmbientOcclusionMode】
+217.   【246†SplatColorSpace】
+218.   【247†SplatCropMode】
+219.   【248†SplatFormat】
+220.   【249†SpriteBlendMode】
+221.   【250†SsrDebugView】
+222.   【251†TextureContent】
+223.   【252†ToneMappingMode】
+224.   【253†UnweldAttribute】
+225.   【254†WidgetInput】
+226.   【255†Mixins】
+227.   【256†SceneGraph】
+228.   【257†Constants】
+229.   【258†kDiffuseShCoefficientCount】
+230.   【22†kRenderLayerAll】
+231.   【259†kRenderLayerDefault】
+232.   【260†Properties】
+233.   【261†baseShaderLibrary】
+234.   【262†Functions】
+235.   【263†blendEnvironmentVolumes】
+236.   【264†clearSceneTemplateCache】
+237.   【265†clearTextureCache】
+238.   【266†decodeEquirectHdrImage】
+239.   【267†decodeOpenExr】
+240.   【268†decodeRadianceHdr】
+241.   【269†detectEquirectImageFormat】
+242.   【270†environmentAssetPathOf】
+243.   【271†generateSolidColorAtlasPixels】
+244.   【272†gpuTextureFromAsset】
+245.   【273†gpuTextureFromImage】
+246.   【274†imageFromAsset】
+247.   【275†imageFromBytes】
+248.   【276†loadBaseShaderLibrary】
+249.   【277†loadFmatMaterial】
+250.   【278†loadFmatSky】
+251.   【279†loadScene】
+252.   【280†loadSceneSubtree】
+253.   【281†loadTexture】
+254.   【282†prefilterEquirectRadiance】
+255.   【283†raycastNode】
+256.   【284†raycastNodeAll】
+257.   【285†releaseScene】
+258.   【286†releaseTexture】
+259.   【287†takeMemoryReport】
+260.   【288†Typedefs】
+261.   【289†FmatMaterialFactory】
+262.   【290†GltfResourceResolver】
+263.   【291†SceneCameraBuilder】
+264.   【292†SceneLoadingBuilder】
+265.   【293†SceneReloadCallback】
+266.   【294†SceneTickCallback】
+267.   【295†SceneViewsBuilder】
+268.   【296†Exceptions】
+269.   【297†ExrFormatException】
+270.   【298†HdrFormatException】
+271.   【299†Extensions】
+272.   【300†QuaternionSlerp】
+273.   【301†Vector3Lerp】
+
+1.   【302†Constructors】
+2.   【10†new】
+3.   【303†Properties】
+4.   【9†antiAliasingMode】
+5.   【3†camera】
+6.   【19†cullingPlanes】
+7.   【20†filterQuality】
+8.   【21†hashCode†api.flutter.dev】
+9.   【7†layerMask】
+10.   【8†order】
+11.   【23†renderScale】
+12.   【24†runtimeType†api.flutter.dev】
+13.   【4†target】
+14.   【6†viewport】
+15.   【304†Methods】
+16.   【26†noSuchMethod†api.flutter.dev】
+17.   【28†toString†api.flutter.dev】
+18.   【305†Operators】
+19.   【30†operator ==†api.flutter.dev】
+
+ flutter_scene 0.22.1
+
+Links/Buttons:
+- [1](https://fscene.dev/api/flutter_scene/latest/index.html)
+- [2](https://fscene.dev/api/flutter_scene/latest/scene/)
+- [3](https://fscene.dev/api/flutter_scene/latest/scene/RenderView/camera.html)
+- [4](https://fscene.dev/api/flutter_scene/latest/scene/RenderView/target.html)
+- [5](https://fscene.dev/api/flutter_scene/latest/scene/RenderTexture-class.html)
+- [6](https://fscene.dev/api/flutter_scene/latest/scene/RenderView/viewport.html)
+- [7](https://fscene.dev/api/flutter_scene/latest/scene/RenderView/layerMask.html)
+- [8](https://fscene.dev/api/flutter_scene/latest/scene/RenderView/order.html)
+- [9](https://fscene.dev/api/flutter_scene/latest/scene/RenderView/antiAliasingMode.html)
+- [10](https://fscene.dev/api/flutter_scene/latest/scene/RenderView/RenderView.html)
+- [11](https://fscene.dev/api/flutter_scene/latest/scene/Camera-class.html)
+- [12](https://api.flutter.dev/flutter/dart-ui/Rect-class.html)
+- [13](https://api.flutter.dev/flutter/dart-core/int-class.html)
+- [14](https://fscene.dev/api/flutter_scene/latest/scene/AntiAliasingMode.html)
+- [15](https://api.flutter.dev/flutter/dart-core/double-class.html)
+- [16](https://api.flutter.dev/flutter/dart-ui/FilterQuality.html)
+- [17](https://api.flutter.dev/flutter/dart-core/List-class.html)
+- [18](https://pub.dev/documentation/vector_math/2.4.2/vector_math/Plane-class.html)
+- [19](https://fscene.dev/api/flutter_scene/latest/scene/RenderView/cullingPlanes.html)
+- [20](https://fscene.dev/api/flutter_scene/latest/scene/RenderView/filterQuality.html)
+- [21](https://api.flutter.dev/flutter/dart-core/Object/hashCode.html)
+- [22](https://fscene.dev/api/flutter_scene/latest/scene/kRenderLayerAll-constant.html)
+- [23](https://fscene.dev/api/flutter_scene/latest/scene/RenderView/renderScale.html)
+- [24](https://api.flutter.dev/flutter/dart-core/Object/runtimeType.html)
+- [25](https://api.flutter.dev/flutter/dart-core/Type-class.html)
+- [26](https://api.flutter.dev/flutter/dart-core/Object/noSuchMethod.html)
+- [27](https://api.flutter.dev/flutter/dart-core/Invocation-class.html)
+- [28](https://api.flutter.dev/flutter/dart-core/Object/toString.html)
+- [29](https://api.flutter.dev/flutter/dart-core/String-class.html)
+- [30](https://api.flutter.dev/flutter/dart-core/Object/operator_equals.html)
+- [31](https://api.flutter.dev/flutter/dart-core/Object-class.html)
+- [32](https://api.flutter.dev/flutter/dart-core/bool-class.html)
+- [33](https://fscene.dev/api/flutter_scene/latest/scene/#classes)
+- [34](https://fscene.dev/api/flutter_scene/latest/scene/AccelerationModule-class.html)
+- [35](https://fscene.dev/api/flutter_scene/latest/scene/AmbientOcclusionSettings-class.html)
+- [36](https://fscene.dev/api/flutter_scene/latest/scene/Animation-class.html)
+- [37](https://fscene.dev/api/flutter_scene/latest/scene/AnimationClip-class.html)
+- [38](https://fscene.dev/api/flutter_scene/latest/scene/AnimationPlayer-class.html)
+- [39](https://fscene.dev/api/flutter_scene/latest/scene/AssetModelSource-class.html)
+- [40](https://fscene.dev/api/flutter_scene/latest/scene/AutoExposureSettings-class.html)
+- [41](https://fscene.dev/api/flutter_scene/latest/scene/BezierPath-class.html)
+- [42](https://fscene.dev/api/flutter_scene/latest/scene/BillboardGeometry-class.html)
+- [43](https://fscene.dev/api/flutter_scene/latest/scene/BloomSettings-class.html)
+- [44](https://fscene.dev/api/flutter_scene/latest/scene/BoxEmitterShape-class.html)
+- [45](https://fscene.dev/api/flutter_scene/latest/scene/BoxVolumeBounds-class.html)
+- [46](https://fscene.dev/api/flutter_scene/latest/scene/CameraComponent-class.html)
+- [47](https://fscene.dev/api/flutter_scene/latest/scene/CameraController-class.html)
+- [48](https://fscene.dev/api/flutter_scene/latest/scene/CameraControls-class.html)
+- [49](https://fscene.dev/api/flutter_scene/latest/scene/CameraProjection-class.html)
+- [50](https://fscene.dev/api/flutter_scene/latest/scene/CapsuleGeometry-class.html)
+- [51](https://fscene.dev/api/flutter_scene/latest/scene/CapturedPass-class.html)
+- [52](https://fscene.dev/api/flutter_scene/latest/scene/CapturedResource-class.html)
+- [53](https://fscene.dev/api/flutter_scene/latest/scene/CatmullRomPath-class.html)
+- [54](https://fscene.dev/api/flutter_scene/latest/scene/ChromaticAberrationSettings-class.html)
+- [55](https://fscene.dev/api/flutter_scene/latest/scene/ColorDistribution-class.html)
+- [56](https://fscene.dev/api/flutter_scene/latest/scene/ColorGradient-class.html)
+- [57](https://fscene.dev/api/flutter_scene/latest/scene/ColorGradingSettings-class.html)
+- [58](https://fscene.dev/api/flutter_scene/latest/scene/ColorLut-class.html)
+- [59](https://fscene.dev/api/flutter_scene/latest/scene/ColorOverLifeModule-class.html)
+- [60](https://fscene.dev/api/flutter_scene/latest/scene/ColorStop-class.html)
+- [61](https://fscene.dev/api/flutter_scene/latest/scene/Component-class.html)
+- [62](https://fscene.dev/api/flutter_scene/latest/scene/ConeEmitterShape-class.html)
+- [63](https://fscene.dev/api/flutter_scene/latest/scene/ConstantColor-class.html)
+- [64](https://fscene.dev/api/flutter_scene/latest/scene/ConstantFloat-class.html)
+- [65](https://fscene.dev/api/flutter_scene/latest/scene/CuboidGeometry-class.html)
+- [66](https://fscene.dev/api/flutter_scene/latest/scene/CurveFloat-class.html)
+- [67](https://fscene.dev/api/flutter_scene/latest/scene/CustomRenderPass-class.html)
+- [68](https://fscene.dev/api/flutter_scene/latest/scene/CylinderGeometry-class.html)
+- [69](https://fscene.dev/api/flutter_scene/latest/scene/DashPattern-class.html)
+- [70](https://fscene.dev/api/flutter_scene/latest/scene/DecodedHdr-class.html)
+- [71](https://fscene.dev/api/flutter_scene/latest/scene/DepthOfField-class.html)
+- [72](https://fscene.dev/api/flutter_scene/latest/scene/DirectionalLight-class.html)
+- [73](https://fscene.dev/api/flutter_scene/latest/scene/DirectionalLightComponent-class.html)
+- [74](https://fscene.dev/api/flutter_scene/latest/scene/DiscGeometry-class.html)
+- [75](https://fscene.dev/api/flutter_scene/latest/scene/EmitterShape-class.html)
+- [76](https://fscene.dev/api/flutter_scene/latest/scene/EnvironmentMap-class.html)
+- [77](https://fscene.dev/api/flutter_scene/latest/scene/EnvironmentSettings-class.html)
+- [78](https://fscene.dev/api/flutter_scene/latest/scene/EnvironmentSkySource-class.html)
+- [79](https://fscene.dev/api/flutter_scene/latest/scene/EnvironmentVolume-class.html)
+- [80](https://fscene.dev/api/flutter_scene/latest/scene/EnvironmentVolumeBounds-class.html)
+- [81](https://fscene.dev/api/flutter_scene/latest/scene/EnvironmentVolumeComponent-class.html)
+- [82](https://fscene.dev/api/flutter_scene/latest/scene/ExtrudeGeometry-class.html)
+- [83](https://fscene.dev/api/flutter_scene/latest/scene/FilmGrainSettings-class.html)
+- [84](https://fscene.dev/api/flutter_scene/latest/scene/FlipbookModule-class.html)
+- [85](https://fscene.dev/api/flutter_scene/latest/scene/FloatDistribution-class.html)
+- [86](https://fscene.dev/api/flutter_scene/latest/scene/FlyCameraController-class.html)
+- [87](https://fscene.dev/api/flutter_scene/latest/scene/FmatMaterialRegistry-class.html)
+- [88](https://fscene.dev/api/flutter_scene/latest/scene/Fog-class.html)
+- [89](https://fscene.dev/api/flutter_scene/latest/scene/FollowCameraController-class.html)
+- [90](https://fscene.dev/api/flutter_scene/latest/scene/GaussianSplats-class.html)
+- [91](https://fscene.dev/api/flutter_scene/latest/scene/Geometry-class.html)
+- [92](https://fscene.dev/api/flutter_scene/latest/scene/GeometryBufferArena-class.html)
+- [93](https://fscene.dev/api/flutter_scene/latest/scene/GeometryBuilder-class.html)
+- [94](https://fscene.dev/api/flutter_scene/latest/scene/GodRaysSettings-class.html)
+- [95](https://fscene.dev/api/flutter_scene/latest/scene/GpuTextureSource-class.html)
+- [96](https://fscene.dev/api/flutter_scene/latest/scene/GradientColor-class.html)
+- [97](https://fscene.dev/api/flutter_scene/latest/scene/GradientSkySource-class.html)
+- [98](https://fscene.dev/api/flutter_scene/latest/scene/HighlightStyle-class.html)
+- [99](https://fscene.dev/api/flutter_scene/latest/scene/IcosphereGeometry-class.html)
+- [100](https://fscene.dev/api/flutter_scene/latest/scene/InstancedMesh-class.html)
+- [101](https://fscene.dev/api/flutter_scene/latest/scene/InstancedMeshComponent-class.html)
+- [102](https://fscene.dev/api/flutter_scene/latest/scene/Lighting-class.html)
+- [103](https://fscene.dev/api/flutter_scene/latest/scene/LinearDragModule-class.html)
+- [104](https://fscene.dev/api/flutter_scene/latest/scene/LineSegmentData-class.html)
+- [105](https://fscene.dev/api/flutter_scene/latest/scene/LineSegmentsGeometry-class.html)
+- [106](https://fscene.dev/api/flutter_scene/latest/scene/LodComponent-class.html)
+- [107](https://fscene.dev/api/flutter_scene/latest/scene/LodLevel-class.html)
+- [108](https://fscene.dev/api/flutter_scene/latest/scene/Material-class.html)
+- [109](https://fscene.dev/api/flutter_scene/latest/scene/MaterialParameters-class.html)
+- [110](https://fscene.dev/api/flutter_scene/latest/scene/MaterialsVariantsComponent-class.html)
+- [111](https://fscene.dev/api/flutter_scene/latest/scene/MemoryCategory-class.html)
+- [112](https://fscene.dev/api/flutter_scene/latest/scene/MemoryModelSource-class.html)
+- [113](https://fscene.dev/api/flutter_scene/latest/scene/MemoryReport-class.html)
+- [114](https://fscene.dev/api/flutter_scene/latest/scene/Mesh-class.html)
+- [115](https://fscene.dev/api/flutter_scene/latest/scene/MeshAttributeData-class.html)
+- [116](https://fscene.dev/api/flutter_scene/latest/scene/MeshComponent-class.html)
+- [117](https://fscene.dev/api/flutter_scene/latest/scene/MeshData-class.html)
+- [118](https://fscene.dev/api/flutter_scene/latest/scene/MeshGeometry-class.html)
+- [119](https://fscene.dev/api/flutter_scene/latest/scene/MeshParticleEmitterComponent-class.html)
+- [120](https://fscene.dev/api/flutter_scene/latest/scene/MeshPrimitive-class.html)
+- [121](https://fscene.dev/api/flutter_scene/latest/scene/MeshTriangle-class.html)
+- [122](https://fscene.dev/api/flutter_scene/latest/scene/Node-class.html)
+- [123](https://fscene.dev/api/flutter_scene/latest/scene/NodeCamera-class.html)
+- [124](https://fscene.dev/api/flutter_scene/latest/scene/NodeFilter-class.html)
+- [125](https://fscene.dev/api/flutter_scene/latest/scene/OrbitCameraController-class.html)
+- [126](https://fscene.dev/api/flutter_scene/latest/scene/ParticleBurst-class.html)
+- [127](https://fscene.dev/api/flutter_scene/latest/scene/ParticleCurve-class.html)
+- [128](https://fscene.dev/api/flutter_scene/latest/scene/ParticleEmitterComponent-class.html)
+- [129](https://fscene.dev/api/flutter_scene/latest/scene/ParticleKeyframe-class.html)
+- [130](https://fscene.dev/api/flutter_scene/latest/scene/ParticleModule-class.html)
+- [131](https://fscene.dev/api/flutter_scene/latest/scene/ParticleStorage-class.html)
+- [132](https://fscene.dev/api/flutter_scene/latest/scene/ParticleSystem-class.html)
+- [133](https://fscene.dev/api/flutter_scene/latest/scene/PerspectiveCamera-class.html)
+- [134](https://fscene.dev/api/flutter_scene/latest/scene/PerspectiveProjection-class.html)
+- [135](https://fscene.dev/api/flutter_scene/latest/scene/PhysicallyBasedMaterial-class.html)
+- [136](https://fscene.dev/api/flutter_scene/latest/scene/PhysicalSkySource-class.html)
+- [137](https://fscene.dev/api/flutter_scene/latest/scene/PlaneGeometry-class.html)
+- [138](https://fscene.dev/api/flutter_scene/latest/scene/PointEmitterShape-class.html)
+- [139](https://fscene.dev/api/flutter_scene/latest/scene/PointLight-class.html)
+- [140](https://fscene.dev/api/flutter_scene/latest/scene/PointLightComponent-class.html)
+- [141](https://fscene.dev/api/flutter_scene/latest/scene/PolylineGeometry-class.html)
+- [142](https://fscene.dev/api/flutter_scene/latest/scene/PolylinePath-class.html)
+- [143](https://fscene.dev/api/flutter_scene/latest/scene/PostEffect-class.html)
+- [144](https://fscene.dev/api/flutter_scene/latest/scene/PostProcessSettings-class.html)
+- [145](https://fscene.dev/api/flutter_scene/latest/scene/PreprocessedMaterial-class.html)
+- [146](https://fscene.dev/api/flutter_scene/latest/scene/PreprocessedSky-class.html)
+- [147](https://fscene.dev/api/flutter_scene/latest/scene/RectAreaLight-class.html)
+- [148](https://fscene.dev/api/flutter_scene/latest/scene/RectAreaLightComponent-class.html)
+- [149](https://fscene.dev/api/flutter_scene/latest/scene/RenderGraphCaptureRequest-class.html)
+- [150](https://fscene.dev/api/flutter_scene/latest/scene/RenderGraphCaptureResult-class.html)
+- [151](https://fscene.dev/api/flutter_scene/latest/scene/RenderPassContext-class.html)
+- [152](https://fscene.dev/api/flutter_scene/latest/scene/RenderTextureSampling-class.html)
+- [153](https://fscene.dev/api/flutter_scene/latest/scene/RenderTextureUpdate-class.html)
+- [154](https://fscene.dev/api/flutter_scene/latest/scene/RenderTextureView-class.html)
+- [155](https://fscene.dev/api/flutter_scene/latest/scene/RenderView-class.html)
+- [156](https://fscene.dev/api/flutter_scene/latest/scene/ResourceGroup-class.html)
+- [157](https://fscene.dev/api/flutter_scene/latest/scene/RibbonGeometry-class.html)
+- [158](https://fscene.dev/api/flutter_scene/latest/scene/RingGeometry-class.html)
+- [159](https://fscene.dev/api/flutter_scene/latest/scene/RotationModule-class.html)
+- [160](https://fscene.dev/api/flutter_scene/latest/scene/Scene-class.html)
+- [161](https://fscene.dev/api/flutter_scene/latest/scene/SceneAnimationSpec-class.html)
+- [162](https://fscene.dev/api/flutter_scene/latest/scene/SceneMesh-class.html)
+- [163](https://fscene.dev/api/flutter_scene/latest/scene/SceneModel-class.html)
+- [164](https://fscene.dev/api/flutter_scene/latest/scene/SceneModelSource-class.html)
+- [165](https://fscene.dev/api/flutter_scene/latest/scene/SceneNode-class.html)
+- [166](https://fscene.dev/api/flutter_scene/latest/scene/SceneNodeController-class.html)
+- [167](https://fscene.dev/api/flutter_scene/latest/scene/SceneNodeHost-class.html)
+- [168](https://fscene.dev/api/flutter_scene/latest/scene/ScenePath-class.html)
+- [169](https://fscene.dev/api/flutter_scene/latest/scene/ScenePathFrame-class.html)
+- [170](https://fscene.dev/api/flutter_scene/latest/scene/ScenePointer-class.html)
+- [171](https://fscene.dev/api/flutter_scene/latest/scene/SceneRaycastHit-class.html)
+- [172](https://fscene.dev/api/flutter_scene/latest/scene/SceneRegistry-class.html)
+- [173](https://fscene.dev/api/flutter_scene/latest/scene/SceneScope-class.html)
+- [174](https://fscene.dev/api/flutter_scene/latest/scene/SceneSubtree-class.html)
+- [175](https://fscene.dev/api/flutter_scene/latest/scene/SceneView-class.html)
+- [176](https://fscene.dev/api/flutter_scene/latest/scene/ScreenSpaceReflectionsSettings-class.html)
+- [177](https://fscene.dev/api/flutter_scene/latest/scene/SemanticsComponent-class.html)
+- [178](https://fscene.dev/api/flutter_scene/latest/scene/ShaderMaterial-class.html)
+- [179](https://fscene.dev/api/flutter_scene/latest/scene/ShaderSkySource-class.html)
+- [180](https://fscene.dev/api/flutter_scene/latest/scene/ShadowCascade-class.html)
+- [181](https://fscene.dev/api/flutter_scene/latest/scene/SizeOverLifeModule-class.html)
+- [182](https://fscene.dev/api/flutter_scene/latest/scene/Skin-class.html)
+- [183](https://fscene.dev/api/flutter_scene/latest/scene/SkinnedGeometry-class.html)
+- [184](https://fscene.dev/api/flutter_scene/latest/scene/Skybox-class.html)
+- [185](https://fscene.dev/api/flutter_scene/latest/scene/SkyEnvironment-class.html)
+- [186](https://fscene.dev/api/flutter_scene/latest/scene/SkySource-class.html)
+- [187](https://fscene.dev/api/flutter_scene/latest/scene/Spawner-class.html)
+- [188](https://fscene.dev/api/flutter_scene/latest/scene/SphereEmitterShape-class.html)
+- [189](https://fscene.dev/api/flutter_scene/latest/scene/SphereGeometry-class.html)
+- [190](https://fscene.dev/api/flutter_scene/latest/scene/SphereVolumeBounds-class.html)
+- [191](https://fscene.dev/api/flutter_scene/latest/scene/SplatComponent-class.html)
+- [192](https://fscene.dev/api/flutter_scene/latest/scene/SplatData-class.html)
+- [193](https://fscene.dev/api/flutter_scene/latest/scene/SpotLight-class.html)
+- [194](https://fscene.dev/api/flutter_scene/latest/scene/SpotLightComponent-class.html)
+- [195](https://fscene.dev/api/flutter_scene/latest/scene/Sprite-class.html)
+- [196](https://fscene.dev/api/flutter_scene/latest/scene/SpriteMaterial-class.html)
+- [197](https://fscene.dev/api/flutter_scene/latest/scene/SunLight-class.html)
+- [198](https://fscene.dev/api/flutter_scene/latest/scene/SunSky-class.html)
+- [199](https://fscene.dev/api/flutter_scene/latest/scene/Surface-class.html)
+- [200](https://fscene.dev/api/flutter_scene/latest/scene/Texture2D-class.html)
+- [201](https://fscene.dev/api/flutter_scene/latest/scene/TextureAtlas-class.html)
+- [202](https://fscene.dev/api/flutter_scene/latest/scene/TextureSampling-class.html)
+- [203](https://fscene.dev/api/flutter_scene/latest/scene/TextureSource-class.html)
+- [204](https://fscene.dev/api/flutter_scene/latest/scene/TextureTransform-class.html)
+- [205](https://fscene.dev/api/flutter_scene/latest/scene/TorusGeometry-class.html)
+- [206](https://fscene.dev/api/flutter_scene/latest/scene/TrailComponent-class.html)
+- [207](https://fscene.dev/api/flutter_scene/latest/scene/TransientWriter-class.html)
+- [208](https://fscene.dev/api/flutter_scene/latest/scene/TubeGeometry-class.html)
+- [209](https://fscene.dev/api/flutter_scene/latest/scene/TurbulenceModule-class.html)
+- [210](https://fscene.dev/api/flutter_scene/latest/scene/UniformColor-class.html)
+- [211](https://fscene.dev/api/flutter_scene/latest/scene/UniformCurveFloat-class.html)
+- [212](https://fscene.dev/api/flutter_scene/latest/scene/UniformFloat-class.html)
+- [213](https://fscene.dev/api/flutter_scene/latest/scene/UnlitMaterial-class.html)
+- [214](https://fscene.dev/api/flutter_scene/latest/scene/UnskinnedGeometry-class.html)
+- [215](https://fscene.dev/api/flutter_scene/latest/scene/VertexAttributeDescriptor-class.html)
+- [216](https://fscene.dev/api/flutter_scene/latest/scene/VertexBufferDescriptor-class.html)
+- [217](https://fscene.dev/api/flutter_scene/latest/scene/VertexLayoutDescriptor-class.html)
+- [218](https://fscene.dev/api/flutter_scene/latest/scene/VignetteSettings-class.html)
+- [219](https://fscene.dev/api/flutter_scene/latest/scene/WedgeGeometry-class.html)
+- [220](https://fscene.dev/api/flutter_scene/latest/scene/WidgetComponent-class.html)
+- [221](https://fscene.dev/api/flutter_scene/latest/scene/WidgetTexture-class.html)
+- [222](https://fscene.dev/api/flutter_scene/latest/scene/WidgetTextureController-class.html)
+- [223](https://fscene.dev/api/flutter_scene/latest/scene/WidgetUpdatePolicy-class.html)
+- [224](https://fscene.dev/api/flutter_scene/latest/scene/#enums)
+- [225](https://fscene.dev/api/flutter_scene/latest/scene/AlphaMode.html)
+- [226](https://fscene.dev/api/flutter_scene/latest/scene/AmbientOcclusionMethod.html)
+- [227](https://fscene.dev/api/flutter_scene/latest/scene/BillboardFacing.html)
+- [228](https://fscene.dev/api/flutter_scene/latest/scene/DepthOfFieldQuality.html)
+- [229](https://fscene.dev/api/flutter_scene/latest/scene/DirectionalShadowFilter.html)
+- [230](https://fscene.dev/api/flutter_scene/latest/scene/EnvironmentVolumeShape.html)
+- [231](https://fscene.dev/api/flutter_scene/latest/scene/EquirectImageFormat.html)
+- [232](https://fscene.dev/api/flutter_scene/latest/scene/FogMode.html)
+- [233](https://fscene.dev/api/flutter_scene/latest/scene/GeometryStorage.html)
+- [234](https://fscene.dev/api/flutter_scene/latest/scene/MeshParticleFacing.html)
+- [235](https://fscene.dev/api/flutter_scene/latest/scene/MeshVariant.html)
+- [236](https://fscene.dev/api/flutter_scene/latest/scene/PolylineCap.html)
+- [237](https://fscene.dev/api/flutter_scene/latest/scene/PolylineWidthMode.html)
+- [238](https://fscene.dev/api/flutter_scene/latest/scene/PostInsertion.html)
+- [239](https://fscene.dev/api/flutter_scene/latest/scene/RenderInput.html)
+- [240](https://fscene.dev/api/flutter_scene/latest/scene/RenderStage.html)
+- [241](https://fscene.dev/api/flutter_scene/latest/scene/RibbonAlignment.html)
+- [242](https://fscene.dev/api/flutter_scene/latest/scene/ShaderStage.html)
+- [243](https://fscene.dev/api/flutter_scene/latest/scene/ShadowCasterFaces.html)
+- [244](https://fscene.dev/api/flutter_scene/latest/scene/SkyEnvironmentRefresh.html)
+- [245](https://fscene.dev/api/flutter_scene/latest/scene/SpecularAmbientOcclusionMode.html)
+- [246](https://fscene.dev/api/flutter_scene/latest/scene/SplatColorSpace.html)
+- [247](https://fscene.dev/api/flutter_scene/latest/scene/SplatCropMode.html)
+- [248](https://fscene.dev/api/flutter_scene/latest/scene/SplatFormat.html)
+- [249](https://fscene.dev/api/flutter_scene/latest/scene/SpriteBlendMode.html)
+- [250](https://fscene.dev/api/flutter_scene/latest/scene/SsrDebugView.html)
+- [251](https://fscene.dev/api/flutter_scene/latest/scene/TextureContent.html)
+- [252](https://fscene.dev/api/flutter_scene/latest/scene/ToneMappingMode.html)
+- [253](https://fscene.dev/api/flutter_scene/latest/scene/UnweldAttribute.html)
+- [254](https://fscene.dev/api/flutter_scene/latest/scene/WidgetInput.html)
+- [255](https://fscene.dev/api/flutter_scene/latest/scene/#mixins)
+- [256](https://fscene.dev/api/flutter_scene/latest/scene/SceneGraph-mixin.html)
+- [257](https://fscene.dev/api/flutter_scene/latest/scene/#constants)
+- [258](https://fscene.dev/api/flutter_scene/latest/scene/kDiffuseShCoefficientCount-constant.html)
+- [259](https://fscene.dev/api/flutter_scene/latest/scene/kRenderLayerDefault-constant.html)
+- [260](https://fscene.dev/api/flutter_scene/latest/scene/#properties)
+- [261](https://fscene.dev/api/flutter_scene/latest/scene/baseShaderLibrary.html)
+- [262](https://fscene.dev/api/flutter_scene/latest/scene/#functions)
+- [263](https://fscene.dev/api/flutter_scene/latest/scene/blendEnvironmentVolumes.html)
+- [264](https://fscene.dev/api/flutter_scene/latest/scene/clearSceneTemplateCache.html)
+- [265](https://fscene.dev/api/flutter_scene/latest/scene/clearTextureCache.html)
+- [266](https://fscene.dev/api/flutter_scene/latest/scene/decodeEquirectHdrImage.html)
+- [267](https://fscene.dev/api/flutter_scene/latest/scene/decodeOpenExr.html)
+- [268](https://fscene.dev/api/flutter_scene/latest/scene/decodeRadianceHdr.html)
+- [269](https://fscene.dev/api/flutter_scene/latest/scene/detectEquirectImageFormat.html)
+- [270](https://fscene.dev/api/flutter_scene/latest/scene/environmentAssetPathOf.html)
+- [271](https://fscene.dev/api/flutter_scene/latest/scene/generateSolidColorAtlasPixels.html)
+- [272](https://fscene.dev/api/flutter_scene/latest/scene/gpuTextureFromAsset.html)
+- [273](https://fscene.dev/api/flutter_scene/latest/scene/gpuTextureFromImage.html)
+- [274](https://fscene.dev/api/flutter_scene/latest/scene/imageFromAsset.html)
+- [275](https://fscene.dev/api/flutter_scene/latest/scene/imageFromBytes.html)
+- [276](https://fscene.dev/api/flutter_scene/latest/scene/loadBaseShaderLibrary.html)
+- [277](https://fscene.dev/api/flutter_scene/latest/scene/loadFmatMaterial.html)
+- [278](https://fscene.dev/api/flutter_scene/latest/scene/loadFmatSky.html)
+- [279](https://fscene.dev/api/flutter_scene/latest/scene/loadScene.html)
+- [280](https://fscene.dev/api/flutter_scene/latest/scene/loadSceneSubtree.html)
+- [281](https://fscene.dev/api/flutter_scene/latest/scene/loadTexture.html)
+- [282](https://fscene.dev/api/flutter_scene/latest/scene/prefilterEquirectRadiance.html)
+- [283](https://fscene.dev/api/flutter_scene/latest/scene/raycastNode.html)
+- [284](https://fscene.dev/api/flutter_scene/latest/scene/raycastNodeAll.html)
+- [285](https://fscene.dev/api/flutter_scene/latest/scene/releaseScene.html)
+- [286](https://fscene.dev/api/flutter_scene/latest/scene/releaseTexture.html)
+- [287](https://fscene.dev/api/flutter_scene/latest/scene/takeMemoryReport.html)
+- [288](https://fscene.dev/api/flutter_scene/latest/scene/#typedefs)
+- [289](https://fscene.dev/api/flutter_scene/latest/scene/FmatMaterialFactory.html)
+- [290](https://fscene.dev/api/flutter_scene/latest/scene/GltfResourceResolver.html)
+- [291](https://fscene.dev/api/flutter_scene/latest/scene/SceneCameraBuilder.html)
+- [292](https://fscene.dev/api/flutter_scene/latest/scene/SceneLoadingBuilder.html)
+- [293](https://fscene.dev/api/flutter_scene/latest/scene/SceneReloadCallback.html)
+- [294](https://fscene.dev/api/flutter_scene/latest/scene/SceneTickCallback.html)
+- [295](https://fscene.dev/api/flutter_scene/latest/scene/SceneViewsBuilder.html)
+- [296](https://fscene.dev/api/flutter_scene/latest/scene/#exceptions)
+- [297](https://fscene.dev/api/flutter_scene/latest/scene/ExrFormatException-class.html)
+- [298](https://fscene.dev/api/flutter_scene/latest/scene/HdrFormatException-class.html)
+- [299](https://fscene.dev/api/flutter_scene/latest/scene/#extensions)
+- [300](https://fscene.dev/api/flutter_scene/latest/scene/QuaternionSlerp.html)
+- [301](https://fscene.dev/api/flutter_scene/latest/scene/Vector3Lerp.html)
+- [302](https://fscene.dev/api/flutter_scene/latest/scene/RenderView-class.html#constructors)
+- [303](https://fscene.dev/api/flutter_scene/latest/scene/RenderView-class.html#instance-properties)
+- [304](https://fscene.dev/api/flutter_scene/latest/scene/RenderView-class.html#instance-methods)
+- [305](https://fscene.dev/api/flutter_scene/latest/scene/RenderView-class.html#operators)

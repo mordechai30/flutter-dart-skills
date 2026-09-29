@@ -1,0 +1,79 @@
+name: example_app
+description: "flutter_scene example project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+resolution: workspace
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  data_assets: ^0.20.0
+  flutter:
+    sdk: flutter
+  flutter_gpu_shaders: ^0.5.1
+  flutter_scene: ^0.23.0
+  # Multiplayer example.
+  dashwire: ^0.1.0
+  dashwire_replication: ^0.2.1
+  flutter_scene_net: ^0.2.0
+  flutter_scene_input: ^0.1.0-dev
+  # The physics contract, used headlessly by the multiplayer arena sim.
+  scene: ^0.3.0
+  # Native Rapier physics backend, used by the Physics example. Pulls
+  # in a Rust build hook, so building this app now requires cargo.
+  flutter_scene_rapier:
+    path: ../../packages/flutter_scene_rapier
+  # SoLoud audio backend, used by the Audio example.
+  flutter_scene_soloud:
+    path: ../../packages/flutter_scene_soloud
+  # box3d physics backend, used by the Physics (box3d) example. Compiles
+  # box3d from source through a C build hook.
+  flutter_scene_box3d:
+    path: ../../packages/flutter_scene_box3d
+  hooks: ^2.0.0
+  http: ^1.2.0
+  # Extracts the .tar.gz of reference DICOM slices for the DICOM Volume example.
+  archive: ^4.0.0
+  path_provider: ^2.1.0
+  vector_math: ^2.1.4
+  web: ^1.1.1
+  video_player: ^2.13.0
+  camera: ^0.12.0+2
+  video_player_platform_interface: ^6.9.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/little_paris_eiffel_tower.png
+    # Looping test pattern for the External Texture example.
+    - assets/testsrc.mp4
+    # Generated test tones for the Audio example.
+    - assets/sounds/
+    # Source .glb files for the runtime importer demo.
+    - assets_src/
+    # Everything hook/build.dart generates (scenes, textures, materials, shader
+    # bundles), loaded by source path. Added by `dart run flutter_scene:init`.
+    - flutter_scene_generated/
+    - path: flutter_scene_generated/metal_ios/
+      platforms:
+        - ios
+    - path: flutter_scene_generated/metal_desktop/
+      platforms:
+        - macos
+    - path: flutter_scene_generated/opengl_es_vulkan/
+      platforms:
+        - android
+        - linux
+        - windows
+    - path: flutter_scene_generated/opengl_es/
+      platforms:
+        - web

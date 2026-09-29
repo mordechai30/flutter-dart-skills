@@ -1,0 +1,204 @@
+Title: Materials
+
+URL Source: https://fscene.dev/guides/materials/
+
+Markdown Content:
+【1†Skip to content】
+
+【2†Scene】
+
+Search Ctrl K
+
+ Cancel 
+
+【3†GitHub†github.com】
+
+*   
+Getting Started
+    *   【4†Welcome to Scene】
+    *   【5†Installation】
+    *   【6†Your first scene】
+    *   【7†Core concepts】
+
+*   
+Editor
+    *   【8†The Flutter Scene Editor】
+
+*   
+Guides
+    *   【9†Overview】
+    *   【10†Declarative scenes】
+    *   【11†Build a product configurator】
+    *   【12†Scene graph】
+    *   【13†Geometry】
+    *   【14†Materials】
+    *   【15†Custom materials】
+    *   【16†Lighting and environment】
+    *   【17†Post-processing】
+    *   【18†Cameras】
+    *   【19†Assets and loading】
+    *   【20†Animation】
+    *   【21†Picking and input】
+    *   【22†Widgets in the scene】
+
+*   
+Reference
+    *   【23†flutter_scene API reference】
+    *   【24†flutter_scene_rapier API reference】
+
+【3†GitHub†github.com】
+
+On this page
+
+*   【1†Overview】
+*   【25†Physically based shading】
+    *   【26†Textures】
+    *   【27†Emission】
+    *   【28†Transparency】
+
+*   【29†Unlit shading】
+*   【30†Material variants】
+*   【31†Custom materials】
+*   【32†Key API】
+
+## On this page
+
+*   【1†Overview】
+*   【25†Physically based shading】
+    *   【26†Textures】
+    *   【27†Emission】
+    *   【28†Transparency】
+
+*   【29†Unlit shading】
+*   【30†Material variants】
+*   【31†Custom materials】
+*   【32†Key API】
+
+# Materials
+
+A material is the shading half of a `Mesh`. It decides how a surface responds to light and what color it ends up. Flutter Scene ships two built-in materials, `PhysicallyBasedMaterial` and `UnlitMaterial`, and lets you write your own with `ShaderMaterial`.
+
+## Physically based shading
+
+【25†Section titled “Physically based shading”】
+
+`PhysicallyBasedMaterial` (PBR) is the default choice for realistic surfaces. It models a surface with a base color plus two scalars, **metallic** and **roughness**, and lights it with the scene’s environment.
+
+Drag the sliders to see how those two values reshape the same sphere. Metallic moves the surface from a plastic-like dielectric to a mirror-like metal, and roughness blurs its reflections from sharp to matte.
+
+▶Run demo Loads a live Flutter Scene build
+
+A metal sphere reflecting an imported environment map. Drag to change metallic and roughness.
+
+The material is just a few fields.
+
+```
+final material = PhysicallyBasedMaterial()  ..baseColorFactor = vm.Vector4(0.85, 0.30, 0.25, 1.0) // linear RGBA  ..metallicFactor = 1.0 // 0 = dielectric, 1 = metal  ..roughnessFactor = 0.25; // 0 = mirror, 1 = fully diffuse
+final mesh = Mesh(SphereGeometry(radius: 1.0), material);scene.add(Node(mesh: mesh));
+```
+
+PBR surfaces need light to look like anything. A new `Scene` already comes with a procedural studio environment, so a material shows up the moment you add it. The sphere above goes a step further and loads an imported equirectangular environment map, which both lights it and appears in its reflections (most visible when it is metallic and smooth). See 【16†Lighting and environment】 for loading environments, drawing one as a skybox, and adding a directional light.
+
+### Textures
+
+【26†Section titled “Textures”】
+
+Every factor has a matching texture that modulates it across the surface. Load one with `loadTexture` (see 【33†Assets and loading】) and assign it to any of these.
+
+`final material = PhysicallyBasedMaterial()  ..baseColorTexture = albedo // multiplied by baseColorFactor  ..metallicRoughnessTexture = metalRough // blue = metallic, green = roughness  ..normalTexture = normal // tangent-space normals  ..occlusionTexture = ao  ..emissiveTexture = emissive;`
+
+The base color texture is multiplied by `baseColorFactor`, so leave the factor white to use the texture unchanged, or tint it. `normalScale`, `occlusionStrength`, and `emissiveFactor` scale their respective inputs.
+
+### Emission
+
+【27†Section titled “Emission”】
+
+`emissiveFactor` adds light-independent color on top of the shaded result, for surfaces that should appear to glow (screens, lava, neon). It is linear HDR, so values above `1.0` read as bright and feed into bloom when it is enabled.
+
+`material.emissiveFactor = vm.Vector4(2.0, 0.4, 0.1, 1.0);`
+
+### Transparency
+
+【28†Section titled “Transparency”】
+
+`alphaMode` controls how the material’s alpha is used.
+
+*   `AlphaMode.opaque` (the default) ignores alpha.
+*   `AlphaMode.blend` routes the mesh through the depth-sorted translucent pass and alpha-blends it.
+*   `AlphaMode.mask` discards fragments below `alphaCutoff`, for cutout surfaces like foliage.
+
+## Unlit shading
+
+【29†Section titled “Unlit shading”】
+
+`UnlitMaterial` ignores scene lighting and draws a flat color or texture. Use it for UI overlays, debug visualization, billboards, or a deliberately stylized look. It is also the cheapest material to draw.
+
+```
+final material = UnlitMaterial()  ..baseColorFactor = vm.Vector4(0.1, 0.6, 0.9, 1.0);
+// Or texture it:final textured = UnlitMaterial(colorTexture: myTexture);
+```
+
+Like PBR, it supports `alphaMode` for transparency and `vertexColorWeight` for mixing in per-vertex colors.
+
+## Material variants
+
+【30†Section titled “Material variants”】
+
+Models authored with `KHR_materials_variants` carry several named material sets on one mesh, the glTF feature behind product colorways. Both import paths keep them. Runtime `.glb` loads and preprocessed `.fsceneb` assets alike arrive with a `MaterialsVariantsComponent` on the model.
+
+`final variants = MaterialsVariantsComponent.of(model);print(variants?.variants); // [midnight, beach, street]variants?.select('beach'); // swaps the mapped materials in placevariants?.select(null);    // restores the authored defaults`
+
+Selection reassigns materials on the live mesh, no reload and no re-upload, so it is instant enough to wire directly to UI. With the declarative API the same switch is the `variant` prop on `SceneModel`; the 【11†configurator tutorial】 builds a full product configurator on it.
+
+## Custom materials
+
+【31†Section titled “Custom materials”】
+
+When the built-ins are not enough, you write your own shader. The supported way is the `.fmat` format, where you declare typed parameters and a small `Surface()` function (plus an optional `Vertex()` function to displace and animate geometry) and a build hook compiles it. Your shader follows the same output contract as the built-ins, linear HDR premultiplied by alpha, so exposure and tone mapping work the same. See 【15†Custom materials】 for the full workflow, unlit and lit shading, vertex customization, and live demos.
+
+## Key API
+
+【32†Section titled “Key API”】
+
+【34†`Material`】, 【35†`PhysicallyBasedMaterial`】, 【36†`UnlitMaterial`】, and 【37†`PreprocessedMaterial`】 (see 【15†Custom materials】).
+
+【13†Previous Geometry】【15†Next Custom materials】
+
+Links/Buttons:
+- [1](https://fscene.dev/guides/materials/#_top)
+- [2](https://fscene.dev/)
+- [3](https://github.com/bdero/flutter_scene)
+- [4](https://fscene.dev/getting-started/)
+- [5](https://fscene.dev/getting-started/installation/)
+- [6](https://fscene.dev/getting-started/your-first-scene/)
+- [7](https://fscene.dev/getting-started/core-concepts/)
+- [8](https://fscene.dev/editor/)
+- [9](https://fscene.dev/guides/)
+- [10](https://fscene.dev/guides/declarative-scenes/)
+- [11](https://fscene.dev/guides/build-a-configurator/)
+- [12](https://fscene.dev/guides/scene-graph/)
+- [13](https://fscene.dev/guides/geometry/)
+- [14](https://fscene.dev/guides/materials/)
+- [15](https://fscene.dev/guides/custom-materials/)
+- [16](https://fscene.dev/guides/lighting-and-environment/)
+- [17](https://fscene.dev/guides/post-processing/)
+- [18](https://fscene.dev/guides/cameras/)
+- [19](https://fscene.dev/guides/assets-and-loading/)
+- [20](https://fscene.dev/guides/animation/)
+- [21](https://fscene.dev/guides/picking-and-input/)
+- [22](https://fscene.dev/guides/widgets/)
+- [23](https://fscene.dev/api/flutter_scene/latest/)
+- [24](https://fscene.dev/api/flutter_scene_rapier/latest/)
+- [25](https://fscene.dev/guides/materials/#physically-based-shading)
+- [26](https://fscene.dev/guides/materials/#textures)
+- [27](https://fscene.dev/guides/materials/#emission)
+- [28](https://fscene.dev/guides/materials/#transparency)
+- [29](https://fscene.dev/guides/materials/#unlit-shading)
+- [30](https://fscene.dev/guides/materials/#material-variants)
+- [31](https://fscene.dev/guides/materials/#custom-materials)
+- [32](https://fscene.dev/guides/materials/#key-api)
+- [33](https://fscene.dev/guides/assets-and-loading/#textures)
+- [34](https://fscene.dev/api/flutter_scene/latest/scene/Material-class.html)
+- [35](https://fscene.dev/api/flutter_scene/latest/scene/PhysicallyBasedMaterial-class.html)
+- [36](https://fscene.dev/api/flutter_scene/latest/scene/UnlitMaterial-class.html)
+- [37](https://fscene.dev/api/flutter_scene/latest/scene/PreprocessedMaterial-class.html)

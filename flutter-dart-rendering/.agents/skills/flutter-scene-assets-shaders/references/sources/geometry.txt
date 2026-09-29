@@ -1,0 +1,159 @@
+Title: Geometry
+
+URL Source: https://fscene.dev/guides/geometry/
+
+Markdown Content:
+【1†Skip to content】
+
+【2†Scene】
+
+Search Ctrl K
+
+ Cancel 
+
+【3†GitHub†github.com】
+
+*   
+Getting Started
+    *   【4†Welcome to Scene】
+    *   【5†Installation】
+    *   【6†Your first scene】
+    *   【7†Core concepts】
+
+*   
+Editor
+    *   【8†The Flutter Scene Editor】
+
+*   
+Guides
+    *   【9†Overview】
+    *   【10†Declarative scenes】
+    *   【11†Build a product configurator】
+    *   【12†Scene graph】
+    *   【13†Geometry】
+    *   【14†Materials】
+    *   【15†Custom materials】
+    *   【16†Lighting and environment】
+    *   【17†Post-processing】
+    *   【18†Cameras】
+    *   【19†Assets and loading】
+    *   【20†Animation】
+    *   【21†Picking and input】
+    *   【22†Widgets in the scene】
+
+*   
+Reference
+    *   【23†flutter_scene API reference】
+    *   【24†flutter_scene_rapier API reference】
+
+【3†GitHub†github.com】
+
+On this page
+
+*   【1†Overview】
+*   【25†Built-in primitives】
+*   【26†Custom geometry】
+*   【27†Lines and swept shapes】
+*   【28†Skinned and unskinned】
+*   【29†Key API】
+
+## On this page
+
+*   【1†Overview】
+*   【25†Built-in primitives】
+*   【26†Custom geometry】
+*   【27†Lines and swept shapes】
+*   【28†Skinned and unskinned】
+*   【29†Key API】
+
+# Geometry
+
+Geometry is the shape half of a `Mesh`. Flutter Scene ships a set of primitive shapes, lets you build your own from raw vertex data, and provides line and swept shapes for strokes and profiles.
+
+▶Run demo Loads a live Flutter Scene build
+
+Built-in primitives: cuboid, sphere, cylinder, cone, capsule, and torus.
+
+## Built-in primitives
+
+【25†Section titled “Built-in primitives”】
+
+Each primitive is a `Geometry` you pair with a material to make a `Mesh`. They are centered on the origin and carry the normals and texture coordinates the materials need.
+
+`final cube = Mesh(CuboidGeometry(vm.Vector3(1, 1, 1)), material);final ball = Mesh(SphereGeometry(radius: 0.6), material);final cone = Mesh(  // A cone is a cylinder with a zero-radius top.  CylinderGeometry(bottomRadius: 0.6, topRadius: 0.0, height: 1.2),  material,);`
+
+The full set is `CuboidGeometry`, `SphereGeometry`, `IcosphereGeometry`, `CylinderGeometry`, `CapsuleGeometry`, `TorusGeometry`, `WedgeGeometry`, `PlaneGeometry`, `DiscGeometry`, and `RingGeometry`. Most take named dimensions and tessellation counts with sensible defaults.
+
+## Custom geometry
+
+【26†Section titled “Custom geometry”】
+
+To build a shape that is not a primitive, use `GeometryBuilder`. It assembles a mesh one vertex and triangle at a time, and its `normal`, `texCoord`, and `color` setters are sticky, applying to every vertex added after them.
+
+`final geometry = (GeometryBuilder()      ..color(vm.Vector4(1, 0, 0, 1))      ..addVertex(vm.Vector3(0, 0, 0))      ..addVertex(vm.Vector3(1, 0, 0))      ..addVertex(vm.Vector3(0, 1, 0))      ..addTriangle(0, 1, 2))    .build();`
+
+If a vertex has no authored normal, the builder generates one. When you already have packed attribute arrays, `MeshGeometry.fromArrays` takes them directly, which is the fast path for procedural meshes.
+
+A geometry can also carry named per-vertex data beyond the standard attributes, supplied with `setCustomAttribute` and read by name in a custom material’s vertex stage. See 【30†Custom materials】.
+
+## Lines and swept shapes
+
+【27†Section titled “Lines and swept shapes”】
+
+For strokes and profile-based shapes there are dedicated geometries.
+
+*   `PolylineGeometry` draws a screen-stable line along a path, with caps, dashes, and width modes.
+*   `TubeGeometry` sweeps a circle along a path to make a tube.
+*   `RibbonGeometry` sweeps a flat strip along a path.
+*   `ExtrudeGeometry` extrudes a 2D profile into a solid.
+
+## Skinned and unskinned
+
+【28†Section titled “Skinned and unskinned”】
+
+The primitives and builder produce `UnskinnedGeometry`. Geometry imported from a rigged glTF arrives as `SkinnedGeometry`, which carries joint weights so it deforms with an animation. See 【19†Assets and loading】.
+
+## Key API
+
+【29†Section titled “Key API”】
+
+【31†`Geometry`】, 【32†`MeshGeometry`】, 【33†`GeometryBuilder`】, and the primitive classes such as 【34†`CuboidGeometry`】 and 【35†`SphereGeometry`】.
+
+【12†Previous Scene graph】【14†Next Materials】
+
+Links/Buttons:
+- [1](https://fscene.dev/guides/geometry/#_top)
+- [2](https://fscene.dev/)
+- [3](https://github.com/bdero/flutter_scene)
+- [4](https://fscene.dev/getting-started/)
+- [5](https://fscene.dev/getting-started/installation/)
+- [6](https://fscene.dev/getting-started/your-first-scene/)
+- [7](https://fscene.dev/getting-started/core-concepts/)
+- [8](https://fscene.dev/editor/)
+- [9](https://fscene.dev/guides/)
+- [10](https://fscene.dev/guides/declarative-scenes/)
+- [11](https://fscene.dev/guides/build-a-configurator/)
+- [12](https://fscene.dev/guides/scene-graph/)
+- [13](https://fscene.dev/guides/geometry/)
+- [14](https://fscene.dev/guides/materials/)
+- [15](https://fscene.dev/guides/custom-materials/)
+- [16](https://fscene.dev/guides/lighting-and-environment/)
+- [17](https://fscene.dev/guides/post-processing/)
+- [18](https://fscene.dev/guides/cameras/)
+- [19](https://fscene.dev/guides/assets-and-loading/)
+- [20](https://fscene.dev/guides/animation/)
+- [21](https://fscene.dev/guides/picking-and-input/)
+- [22](https://fscene.dev/guides/widgets/)
+- [23](https://fscene.dev/api/flutter_scene/latest/)
+- [24](https://fscene.dev/api/flutter_scene_rapier/latest/)
+- [25](https://fscene.dev/guides/geometry/#built-in-primitives)
+- [26](https://fscene.dev/guides/geometry/#custom-geometry)
+- [27](https://fscene.dev/guides/geometry/#lines-and-swept-shapes)
+- [28](https://fscene.dev/guides/geometry/#skinned-and-unskinned)
+- [29](https://fscene.dev/guides/geometry/#key-api)
+- [30](https://fscene.dev/guides/custom-materials/#custom-vertex-attributes-mesh-to-vertex)
+- [31](https://fscene.dev/api/flutter_scene/latest/scene/Geometry-class.html)
+- [32](https://fscene.dev/api/flutter_scene/latest/scene/MeshGeometry-class.html)
+- [33](https://fscene.dev/api/flutter_scene/latest/scene/GeometryBuilder-class.html)
+- [34](https://fscene.dev/api/flutter_scene/latest/scene/CuboidGeometry-class.html)
+- [35](https://fscene.dev/api/flutter_scene/latest/scene/SphereGeometry-class.html)

@@ -1,0 +1,307 @@
+Title: Custom materials
+
+URL Source: https://fscene.dev/guides/custom-materials/
+
+Markdown Content:
+【1†Skip to content】
+
+【2†Scene】
+
+Search Ctrl K
+
+ Cancel 
+
+【3†GitHub†github.com】
+
+*   
+Getting Started
+    *   【4†Welcome to Scene】
+    *   【5†Installation】
+    *   【6†Your first scene】
+    *   【7†Core concepts】
+
+*   
+Editor
+    *   【8†The Flutter Scene Editor】
+
+*   
+Guides
+    *   【9†Overview】
+    *   【10†Declarative scenes】
+    *   【11†Build a product configurator】
+    *   【12†Scene graph】
+    *   【13†Geometry】
+    *   【14†Materials】
+    *   【15†Custom materials】
+    *   【16†Lighting and environment】
+    *   【17†Post-processing】
+    *   【18†Cameras】
+    *   【19†Assets and loading】
+    *   【20†Animation】
+    *   【21†Picking and input】
+    *   【22†Widgets in the scene】
+
+*   
+Reference
+    *   【23†flutter_scene API reference】
+    *   【24†flutter_scene_rapier API reference】
+
+【3†GitHub†github.com】
+
+On this page
+
+*   【1†Overview】
+*   【25†A minimal material】
+*   【26†Parameters】
+*   【27†Unlit and lit shading】
+*   【28†Engine inputs】
+*   【29†The vertex stage】
+    *   【30†Varyings, vertex to fragment】
+    *   【31†Custom vertex attributes, mesh to vertex】
+
+*   【32†The output contract】
+*   【33†Render state】
+*   【34†Animated parameters】
+*   【35†Hot reload】
+*   【36†Custom skies】
+*   【37†The ShaderMaterial escape hatch】
+*   【38†Key API】
+
+## On this page
+
+*   【1†Overview】
+*   【25†A minimal material】
+*   【26†Parameters】
+*   【27†Unlit and lit shading】
+*   【28†Engine inputs】
+*   【29†The vertex stage】
+    *   【30†Varyings, vertex to fragment】
+    *   【31†Custom vertex attributes, mesh to vertex】
+
+*   【32†The output contract】
+*   【33†Render state】
+*   【34†Animated parameters】
+*   【35†Hot reload】
+*   【36†Custom skies】
+*   【37†The ShaderMaterial escape hatch】
+*   【38†Key API】
+
+# Custom materials
+
+When 【14†`PhysicallyBasedMaterial`】 and `UnlitMaterial` are not enough, you write your own shader. The supported way to do that is the **`.fmat` format**. You declare typed parameters and a small `Surface()` function in GLSL (plus an optional `Vertex()` function to displace and animate geometry), a build hook compiles it, and you load the result by source path. There is no uniform packing to get right by hand, parameters are type checked, and you can opt into the engine’s physically based lighting.
+
+This guide assumes you have run the asset pipeline setup once (`dart run flutter_scene:init`). See 【39†Set up the asset pipeline】 if you have not.
+
+## A minimal material
+
+【25†Section titled “A minimal material”】
+
+A `.fmat` file has two blocks. The `material { }` block is metadata (a name, render state, and the parameter list), and the `fragment { }` block holds the GLSL `Surface()` function.
+
+assets/glow.fmat
+
+```
+material {  name: "Glow",  shading_model: unlit,  parameters: [    { type: vec4, name: color, hint: source_color, default: [0.2, 0.6, 1.0, 1.0] },    { type: float, name: falloff, hint: range(0.5, 8, 0.1), default: 3.0 },  ],}
+fragment {  void Surface(inout MaterialInputs material) {    vec3 normal = GetWorldNormal();    vec3 view_dir = GetViewDirection();    float fresnel = pow(1.0 - max(dot(normal, view_dir), 0.0),                        material_params.falloff);    material.base_color = vec4(material_params.color.rgb * fresnel, 1.0);    PrepareMaterial(material);  }}
+```
+
+Load it by its source path and set its parameters by name.
+
+```
+final glow = await loadFmatMaterial('assets/glow.fmat');glow.parameters  ..setColor('color', const Color(0xFF33A0FF))  ..setFloat('falloff', 3.0);
+node.mesh!.primitives.first.material = glow;
+```
+
+▶Run demo Loads a live Flutter Scene build
+
+A minimal unlit .fmat material on an imported model, a Fresnel rim from the world normal and view direction.
+
+`loadFmatMaterial` returns a 【40†`PreprocessedMaterial`】. Everything else on this page builds on those two blocks.
+
+## Parameters
+
+【26†Section titled “Parameters”】
+
+Each parameter is `{ type, name, hint?, default? }`. Scalar and vector types (`float`, `int`, `vec2`, `vec3`, `vec4`, `mat4`) are packed into a uniform block, and you read them in the shader as `material_params.<name>`. Sampler types (`sampler2d`, `samplerCube`) are read by their bare name.
+
+You set them from Dart through 【41†`material.parameters`】, which is type checked and name addressed. There are no std140 offsets to compute, and a wrong-typed value throws instead of corrupting the block.
+
+`glow.parameters  ..setFloat('falloff', 3.0)  ..setVec4('color', vm.Vector4(0.2, 0.6, 1.0, 1.0))  ..setColor('color', const Color(0xFF33A0FF)) // sRGB-decoded if source_color  ..setTexture('base_color_texture', myTexture);`
+
+**Hints** add semantics. `source_color` marks a color as sRGB-authored, so `setColor` decodes it to linear. `range(min, max, step)` records a bounded numeric range for tooling. The `default_white` / `default_black` / `default_normal` / `default_transparent` sampler hints pick the placeholder texture used until you set one, so an unset sampler still renders. **Defaults** apply when the material is constructed, so an unset parameter renders sensibly.
+
+## Unlit and lit shading
+
+【27†Section titled “Unlit and lit shading”】
+
+The `shading_model` decides what your `Surface()` produces.
+
+An **unlit** material writes the final color straight into `material.base_color`. The `Glow` material above is unlit. This is the path for fully custom shading, toon shading, stylized looks, anything where you own the final color.
+
+A **lit** material fills a surface description and the engine lights it with image-based lighting and the scene’s directional light (with shadows). You set `base_color`, `metallic`, `roughness`, `normal`, `occlusion`, and `emissive` on the `MaterialInputs`.
+
+`struct MaterialInputs {  vec4 base_color;   // linear rgb, straight (non-premultiplied) alpha  vec3 normal;       // world-space shading normal  vec3 emissive;     // linear emissive radiance  float metallic;    // 0 dielectric .. 1 conductor  float roughness;   // perceptual roughness, 0..1  float occlusion;   // ambient occlusion, 1 = unoccluded};`
+
+The material below is `lit`. It keeps a near-black base and drives `emissive` with an animated `time` parameter, so bands of glow sweep the surface while the environment still glares off it.
+
+▶Run demo Loads a live Flutter Scene build
+
+A lit .fmat material driving animated emission. Metallic reflections come from the scene environment.
+
+Always call `PrepareMaterial(material)` before returning from `Surface()`.
+
+## Engine inputs
+
+【28†Section titled “Engine inputs”】
+
+Read the engine’s per-fragment values through accessors rather than raw varyings.
+
+`vec3 GetWorldPosition();   // world-space fragment positionvec3 GetWorldNormal();     // normalized world-space geometric normalvec3 GetViewDirection();   // normalized direction toward the cameravec2 GetUV0();             // primary texture coordinatesvec4 GetVertexColor();     // interpolated per-vertex color (white if none)`
+
+The engine’s standard GLSL helpers are included for you, including `SRGBToLinear`, the Cook-Torrance BRDF pieces, `PerturbNormal`, and `SamplePrefilteredRadiance`.
+
+## The vertex stage
+
+【29†Section titled “The vertex stage”】
+
+A material may add an optional `vertex { }` block to customize the vertex stage, displacing geometry, animating it, or reshaping normals. You write one function, and the engine runs it on every mesh type and pass (static, skinned, and the depth/shadow pass), with skinning already applied by the time it runs, so you never branch on the mesh type.
+
+`vertex {  void Vertex(inout VertexInputs vertex) {    // Read and modify the vertex, in place.  }}`
+
+`VertexInputs` carries the vertex through the stage.
+
+`struct VertexInputs {  vec3 position;        // object space (post-skinning on a skinned mesh)  vec3 normal;          // object space  vec3 world_position;  // world space, after the model/skin transform  vec3 world_normal;    // world space  vec2 uv;  vec4 color;  vec3 camera_position; // read-only, world space};`
+
+Write `world_position` to displace geometry (the engine projects it to clip space after `Vertex()` returns) and `world_normal` to change how the surface is shaded. Parameters are available in `Vertex()` just as in `Surface()`, so one parameter drives both stages. The demo below is the classic false-horizon world curve, a two-line displacement that bends everything down with distance from the camera.
+
+`vertex {  void Vertex(inout VertexInputs vertex) {    vec3 rel = vertex.world_position - vertex.camera_position;    vertex.world_position.y -= material_params.curvature * dot(rel.xz, rel.xz);  }}`
+
+▶Run demo Loads a live Flutter Scene build
+
+A vertex-stage world curve bending the road over a false horizon. One curvature parameter drives both shader stages.
+
+When reshaping normals, prefer perturbing the provided value (`vertex.world_normal = normalize(vertex.world_normal + delta)`) over assigning a fresh one; it keeps the mesh normal meaningful.
+
+### Varyings, vertex to fragment
+
+【30†Section titled “Varyings, vertex to fragment”】
+
+Declare named interpolants in a `varyings` list; `Vertex()` writes them and `Surface()` reads them, by name. The compiler generates the matching declarations, so you never pick a location. The road demo above uses one to dim geometry as it curves away.
+
+`material {  name: "Curve",  varyings: [ { type: float, name: curve_fade } ], // float/vec2/vec3/vec4}vertex {  void Vertex(inout VertexInputs vertex) { /* ... */ curve_fade = ...; }}fragment {  void Surface(inout MaterialInputs material) {    material.base_color.rgb *= mix(1.0, 0.4, curve_fade);    PrepareMaterial(material);  }}`
+
+### Custom vertex attributes, mesh to vertex
+
+【31†Section titled “Custom vertex attributes, mesh to vertex”】
+
+Declare named per-vertex inputs in an `attributes` list, and the mesh supplies the data, matched by name. `Vertex()` reads each by its bare name.
+
+`material {  name: "Waves",  attributes: [ { type: float, name: wave_seed } ], // float/vec2/vec3/vec4}vertex {  void Vertex(inout VertexInputs vertex) {    vertex.world_position.y += sin(material_params.time + wave_seed);  }}`
+
+Supply the data on the geometry, one value per vertex.
+
+`geometry.setCustomAttribute('wave_seed', seeds, components: 1);`
+
+Custom attributes work on unskinned and skinned geometry alike (attaching one to a skinned mesh switches it to a described vertex layout, since shader reflection cannot know which slot the stream was bound to). The depth/shadow pass fetches only positions, so an attribute reads zero there, meaning attribute-driven displacement is not reflected in cast shadows, while displacement driven by `world_position` and parameters is.
+
+The demo below puts the whole vertex surface together in one material, animated wave displacement plus the world curve, a `wave_seed` attribute for organic motion, an analytic normal write the engine lights, and two varyings coloring crest foam and the horizon fade.
+
+▶Run demo Loads a live Flutter Scene build
+
+An animated ocean authored in the .fmat vertex stage, with a custom per-vertex attribute and lit wave normals.
+
+## The output contract
+
+【32†Section titled “The output contract”】
+
+A material outputs **linear HDR premultiplied by alpha**. Flutter Scene renders into a floating-point scene target and then applies exposure, the tone-mapping operator, and the display encoding in one resolve pass. So do not tone-map or gamma-encode in your shader, and premultiply rgb by alpha. Values above `1.0` are fine, the tone curve rolls them off. When you sample an sRGB texture, linearize it first with `SRGBToLinear`. A `.fmat` material gets the premultiplied output for free. This is the same contract the built-in materials follow (see 【14†Materials】).
+
+## Render state
+
+【33†Section titled “Render state”】
+
+The `material` block declares render state. `culling` is `back` (the default), `front`, or `none` (double sided). `blending` is `opaque` (the default) or `alpha`, which routes the material through the depth-sorted translucent pass and blends it premultiplied source-over.
+
+`material {  name: "Glass",  shading_model: lit,  blending: alpha,  culling: none,  parameters: [ /* ... */ ],}`
+
+## Animated parameters
+
+【34†Section titled “Animated parameters”】
+
+A parameter is just a value you set from Dart, so animate one by writing it each frame. The lit demo above declares a `float time` and advances it from the view’s tick.
+
+`SceneView(  scene,  onTick: (elapsed, deltaSeconds) {    material.parameters.setFloat('time', elapsed.inMicroseconds / 1e6);  },);`
+
+## Hot reload
+
+【35†Section titled “Hot reload”】
+
+A `.fmat` loaded with `loadFmatMaterial` hot reloads in place. Render the scene through a `SceneView`, and editing the `.fmat` (its GLSL body, render state, or parameter defaults) updates the running app with no restart. A value you set at runtime is preserved, an unset parameter takes the edited default. Hot reload is debug only.
+
+## Custom skies
+
+【36†Section titled “Custom skies”】
+
+A `.fmat` can also author a procedural sky. Instead of `fragment { }`, it has a `sky { vec3 Sky(vec3 direction) }` block, and `loadFmatSky` returns a 【42†`PreprocessedSky`】 you assign to the scene’s skybox. See 【43†Lighting and environment】 for the full workflow and a demo.
+
+## The ShaderMaterial escape hatch
+
+【37†Section titled “The ShaderMaterial escape hatch”】
+
+【44†`ShaderMaterial`】 runs a complete raw fragment shader you write, with your own uniform blocks and samplers bound by name and packed std140 by hand. Reach for it only when you need a shader shape the `.fmat` format does not cover yet, since it gives up the type checking, automatic packing, and hot reload that `.fmat` provides.
+
+## Key API
+
+【38†Section titled “Key API”】
+
+【45†`loadFmatMaterial`】, 【40†`PreprocessedMaterial`】, 【41†`MaterialParameters`】, 【46†`loadFmatSky`】, 【42†`PreprocessedSky`】, and 【44†`ShaderMaterial`】.
+
+【14†Previous Materials】【16†Next Lighting and environment】
+
+Links/Buttons:
+- [1](https://fscene.dev/guides/custom-materials/#_top)
+- [2](https://fscene.dev/)
+- [3](https://github.com/bdero/flutter_scene)
+- [4](https://fscene.dev/getting-started/)
+- [5](https://fscene.dev/getting-started/installation/)
+- [6](https://fscene.dev/getting-started/your-first-scene/)
+- [7](https://fscene.dev/getting-started/core-concepts/)
+- [8](https://fscene.dev/editor/)
+- [9](https://fscene.dev/guides/)
+- [10](https://fscene.dev/guides/declarative-scenes/)
+- [11](https://fscene.dev/guides/build-a-configurator/)
+- [12](https://fscene.dev/guides/scene-graph/)
+- [13](https://fscene.dev/guides/geometry/)
+- [14](https://fscene.dev/guides/materials/)
+- [15](https://fscene.dev/guides/custom-materials/)
+- [16](https://fscene.dev/guides/lighting-and-environment/)
+- [17](https://fscene.dev/guides/post-processing/)
+- [18](https://fscene.dev/guides/cameras/)
+- [19](https://fscene.dev/guides/assets-and-loading/)
+- [20](https://fscene.dev/guides/animation/)
+- [21](https://fscene.dev/guides/picking-and-input/)
+- [22](https://fscene.dev/guides/widgets/)
+- [23](https://fscene.dev/api/flutter_scene/latest/)
+- [24](https://fscene.dev/api/flutter_scene_rapier/latest/)
+- [25](https://fscene.dev/guides/custom-materials/#a-minimal-material)
+- [26](https://fscene.dev/guides/custom-materials/#parameters)
+- [27](https://fscene.dev/guides/custom-materials/#unlit-and-lit-shading)
+- [28](https://fscene.dev/guides/custom-materials/#engine-inputs)
+- [29](https://fscene.dev/guides/custom-materials/#the-vertex-stage)
+- [30](https://fscene.dev/guides/custom-materials/#varyings-vertex-to-fragment)
+- [31](https://fscene.dev/guides/custom-materials/#custom-vertex-attributes-mesh-to-vertex)
+- [32](https://fscene.dev/guides/custom-materials/#the-output-contract)
+- [33](https://fscene.dev/guides/custom-materials/#render-state)
+- [34](https://fscene.dev/guides/custom-materials/#animated-parameters)
+- [35](https://fscene.dev/guides/custom-materials/#hot-reload)
+- [36](https://fscene.dev/guides/custom-materials/#custom-skies)
+- [37](https://fscene.dev/guides/custom-materials/#the-shadermaterial-escape-hatch)
+- [38](https://fscene.dev/guides/custom-materials/#key-api)
+- [39](https://fscene.dev/getting-started/installation/#set-up-the-asset-pipeline)
+- [40](https://fscene.dev/api/flutter_scene/latest/scene/PreprocessedMaterial-class.html)
+- [41](https://fscene.dev/api/flutter_scene/latest/scene/MaterialParameters-class.html)
+- [42](https://fscene.dev/api/flutter_scene/latest/scene/PreprocessedSky-class.html)
+- [43](https://fscene.dev/guides/lighting-and-environment/#a-custom-sky)
+- [44](https://fscene.dev/api/flutter_scene/latest/scene/ShaderMaterial-class.html)
+- [45](https://fscene.dev/api/flutter_scene/latest/scene/loadFmatMaterial.html)
+- [46](https://fscene.dev/api/flutter_scene/latest/scene/loadFmatSky.html)

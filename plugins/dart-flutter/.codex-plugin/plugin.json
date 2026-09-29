@@ -1,0 +1,49 @@
+{
+  "name": "dart-flutter",
+  "version": "1.0.6",
+  "description": "Official Codex plugin for Dart and Flutter that installs Flutter/Dart Skills and Dart MCP server for building natively compiled, visually stunning applications for mobile, web, desktop, and embedded devices from a single codebase.",
+  "author": {
+    "name": "Dart and Flutter",
+    "url": "https://flutter.dev"
+  },
+  "homepage": "https://github.com/flutter/agent-plugins",
+  "repository": "https://github.com/flutter/agent-plugins",
+  "license": "BSD-3-Clause",
+  "keywords": [
+    "flutter",
+    "dart",
+    "mobile",
+    "codex",
+    "skills",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": {
+    "dart-mcp-server": {
+      "command": "dart",
+      "args": [
+        "mcp-server"
+      ],
+      "env": {
+        "AGENT_PLUGIN": "codex"
+      }
+    }
+  },
+  "interface": {
+    "displayName": "Dart and Flutter",
+    "shortDescription": "Build and manage Dart and Flutter apps from Codex.",
+    "longDescription": "Use official Dart and Flutter skills and the MCP server to develop apps, run workflows, and manage code from Codex.",
+    "developerName": "Dart and Flutter",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Skills",
+      "MCP"
+    ],
+    "websiteURL": "https://flutter.dev",
+    "defaultPrompt": [
+      "Build a Flutter screen for this app.",
+      "Add tests for this Dart package.",
+      "Diagnose this Flutter layout issue."
+    ]
+  }
+}

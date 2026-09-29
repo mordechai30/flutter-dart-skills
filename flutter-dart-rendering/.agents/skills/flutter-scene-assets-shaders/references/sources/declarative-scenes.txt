@@ -1,0 +1,249 @@
+Title: Declarative scenes
+
+URL Source: https://fscene.dev/guides/declarative-scenes/
+
+Markdown Content:
+【1†Skip to content】
+
+【2†Scene】
+
+Search Ctrl K
+
+ Cancel 
+
+【3†GitHub†github.com】
+
+*   
+Getting Started
+    *   【4†Welcome to Scene】
+    *   【5†Installation】
+    *   【6†Your first scene】
+    *   【7†Core concepts】
+
+*   
+Editor
+    *   【8†The Flutter Scene Editor】
+
+*   
+Guides
+    *   【9†Overview】
+    *   【10†Declarative scenes】
+    *   【11†Build a product configurator】
+    *   【12†Scene graph】
+    *   【13†Geometry】
+    *   【14†Materials】
+    *   【15†Custom materials】
+    *   【16†Lighting and environment】
+    *   【17†Post-processing】
+    *   【18†Cameras】
+    *   【19†Assets and loading】
+    *   【20†Animation】
+    *   【21†Picking and input】
+    *   【22†Widgets in the scene】
+
+*   
+Reference
+    *   【23†flutter_scene API reference】
+    *   【24†flutter_scene_rapier API reference】
+
+【3†GitHub†github.com】
+
+On this page
+
+*   【1†Overview】
+*   【25†The pieces】
+*   【26†The tree】
+*   【27†The node widgets】
+*   【28†The owned-scene view】
+*   【29†Animating the scene】
+*   【30†Mixing with the imperative API】
+*   【31†Loading and reveal】
+*   【32†Hot reload】
+*   【33†Where the imperative API fits】
+
+## On this page
+
+*   【1†Overview】
+*   【25†The pieces】
+*   【26†The tree】
+*   【27†The node widgets】
+*   【28†The owned-scene view】
+*   【29†Animating the scene】
+*   【30†Mixing with the imperative API】
+*   【31†Loading and reveal】
+*   【32†Hot reload】
+*   【33†Where the imperative API fits】
+
+# Declarative scenes
+
+The declarative API lets you describe a 3D scene in `build()` the way you describe UI. Widgets like `SceneNode` and `SceneMesh` own retained engine objects; rebuilding applies only what changed, and adding or removing widgets attaches and detaches nodes. Scene structure becomes a function of widget state, so interactivity falls out of `setState`, and hot reload reconciles structural edits in place.
+
+The demo below is a birthday cake built entirely in `build()`. The candle count, whether the candles are lit, and the frosting flavor are all widget state, and the controls just call `setState`.
+
+▶Run demo Loads a live Flutter Scene build
+
+A birthday cake described in build(). The candle count, the lit flames, and the frosting flavor are widget state, reconciled onto the retained scene graph in place.
+
+## The pieces
+
+【25†Section titled “The pieces”】
+
+The objects a scene draws with, `Geometry` and `Material`, are plain Dart objects you build yourself. Build them once and hold them (fields on your `State`, or `initState`). The widgets reference them and diff them by identity, so reusing an instance keeps rebuilds cheap, and rebuilding a GPU resource every frame is the one thing to avoid.
+
+The cake is a few primitives. A wide short cylinder for the cake, a thin tall one for each candle, a small sphere for each flame, and a flat disc for the plate.
+
+`final Geometry plateGeometry = CylinderGeometry(  bottomRadius: 1.9,  topRadius: 1.9,  height: 0.1,);final Geometry cakeGeometry = CylinderGeometry(  bottomRadius: 1.4,  topRadius: 1.4,  height: 0.9,);final Geometry candleGeometry = CylinderGeometry(  bottomRadius: 0.06,  topRadius: 0.06,  height: 0.5,);final Geometry flameGeometry = SphereGeometry(radius: 0.08);`
+
+The materials are physically based, except the flame, which is an `UnlitMaterial` with an HDR-bright warm color so it reads as a glow instead of a lit surface. The three frostings are the same material built with different base colors.
+
+```
+PhysicallyBasedMaterial pbr(Color color, {double metallic = 0.0, double roughness = 0.45}) =>    PhysicallyBasedMaterial()      ..baseColorFactor = vm.Vector4(color.r, color.g, color.b, 1.0)      ..metallicFactor = metallic      ..roughnessFactor = roughness;
+final Material plateMaterial = pbr(const Color(0xff17181d), metallic: 0.85, roughness: 0.3);final Material candleMaterial = pbr(const Color(0xfff0ead6), roughness: 0.6);final List<Material> frostings = [  pbr(const Color(0xfff3e3c0)), // Vanilla  pbr(const Color(0xffec9bb0)), // Strawberry  pbr(const Color(0xffa7c47a)), // Matcha];final Material flameMaterial = UnlitMaterial()  ..baseColorFactor = vm.Vector4(2.6, 0.62, 0.08, 1.0);
+```
+
+Lighting is components on nodes, so it is built the same way. A key and fill light shape the cake, and one warm point light per candle is mounted only while that candle is lit, so blowing the candles out visibly changes the lighting rather than just removing the flame sphere. The per-candle lights use a short range so the glow pools on the cake top rather than reaching the plate below (point lights are not occluded by the cake), and they are pre-allocated so their instances stay stable as the count changes.
+
+`final keyLight = PointLightComponent(  PointLight(color: vm.Vector3(1.0, 0.93, 0.82), intensity: 80, range: 50),);final fillLight = PointLightComponent(  PointLight(color: vm.Vector3(0.55, 0.68, 1.0), intensity: 30, range: 50),);final flameLights = List.generate(  12,  (_) => PointLightComponent(    PointLight(color: vm.Vector3(1.0, 0.5, 0.18), intensity: 6, range: 1.3),  ),);`
+
+The 【13†Geometry】 and 【14†Materials】 guides cover the full set of primitives and material options, and 【16†Lighting and environment】 covers lights in depth.
+
+## The tree
+
+【26†Section titled “The tree”】
+
+The state is three fields, the candle count, whether the flames are lit, and the selected frosting.
+
+`int candles = 5;bool lit = true;int flavor = 0;`
+
+`build()` returns a `SceneView.declarative` describing the whole scene. A `SpinComponent` (below) turns the cake, two point lights sit outside the spinning subtree so they stay put, and the candles are a plain `for` loop with an `if` for the flames.
+
+`SceneView.declarative(  exposure: 1.4,  camera: PerspectiveCamera(    position: vm.Vector3(0, 3.4, 6.2),    target: vm.Vector3(0, 0.55, 0),  ),  children: [    SceneNode(position: vm.Vector3(3.5, 5, 4), components: [keyLight]),    SceneNode(position: vm.Vector3(-4, 2.5, -2.5), components: [fillLight]),    SceneNode(      components: [spin],      children: [        SceneMesh(          geometry: plateGeometry,          material: plateMaterial,          position: vm.Vector3(0, 0.05, 0),        ),        SceneMesh(          geometry: cakeGeometry,          material: frostings[flavor],          position: vm.Vector3(0, 0.55, 0),        ),        for (var i = 0; i < candles; i++)          SceneNode(            key: ValueKey(i),            position: candlePosition(i, candles),            children: [              SceneMesh(                geometry: candleGeometry,                material: candleMaterial,                position: vm.Vector3(0, 0.25, 0),              ),              if (lit)                SceneMesh(                  geometry: flameGeometry,                  material: flameMaterial,                  position: vm.Vector3(0, 0.58, 0),                  components: [flameLights[i]],                ),            ],          ),      ],    ),  ],)`
+
+Changing `candles`, `lit`, or `flavor` and calling `setState` is the whole interaction. The `for` adds and removes candle nodes, the `if` mounts or removes each flame together with its point light (so the light appears and disappears with the flame), and reading `frostings[flavor]` re-materials the cake, each reconciled in place without disturbing the rest of the tree. The `key` keeps each candle’s identity stable as the count changes, so growing the ring adds one node rather than rebuilding all of them. `candlePosition` is ordinary Dart, a ring on top of the cake.
+
+`vm.Vector3 candlePosition(int index, int count) {  final angle = 2 * pi * index / count;  return vm.Vector3(cos(angle) * 0.9, 1.0, sin(angle) * 0.9);}`
+
+## The node widgets
+
+【27†Section titled “The node widgets”】
+
+**`SceneNode`** declares a transform. Give it decomposed `position`/`rotation`/`scale` or a full `transform` matrix (not both), `visible`, engine `components`, and `children`. The cake’s candles are bare `SceneNode`s that position a subtree.
+
+**`SceneMesh`** is a `SceneNode` that also draws. It pairs a `geometry` with a `material`. Both are diffed by identity, so a mesh is only rebuilt when you pass a different instance, which is why the frosting swatches swap between prebuilt materials rather than constructing new ones.
+
+**`SceneModel`** loads a `.glb` asynchronously and mounts it, with the same transform props plus loading phases, animation, and material-variant selection; the 【19†Assets and loading】 and 【20†Animation】 guides cover those.
+
+Plain Dart collection syntax is the structural API, `if` for conditional content, `for` for lists, and keys to keep node identity stable across reorders. `GlobalKey` even reparents a live node to a different part of the scene without recreating it.
+
+## The owned-scene view
+
+【28†Section titled “The owned-scene view”】
+
+`SceneView.declarative` renders a scene the view itself owns. Scene-level settings are constructor props (the cake sets `exposure` and a fixed `camera`), and the scene’s contents are the `children`.
+
+`SceneView.declarative(  environment: environment,       // identity-diffed; null means the studio default  environmentIntensity: 1.0,  exposure: 1.2,  toneMapping: ToneMappingMode.pbrNeutral,  children: [...],)`
+
+Omitted props mean the scene defaults, and removing a prop on a later build restores its default, the tree is the whole truth. The camera options (`camera`, `cameraBuilder`, `viewsBuilder`) and the loading arguments work exactly as they do on the app-owned constructor.
+
+## Animating the scene
+
+【29†Section titled “Animating the scene”】
+
+Animating a scene is ordinary Flutter. Drive a declared property from state and rebuild with `setState`, an `AnimatedBuilder`, a `TweenAnimationBuilder`, or an implicit animation, and the scene follows. That is what the widgets are for, rebuilding is how the scene changes.
+
+This stays fast because reconciliation is a diff. On rebuild each widget compares its props against the previous build, using the value equality the vector types define, and writes only what changed, so an animating node pushes a few floats to its `Node` while every unchanged node in the tree writes nothing. A `TweenAnimationBuilder` easing a `position`, or a `setState` that moves a handful of nodes per frame, is comfortably within budget for the moderately complex scenes this layer is built for. Scale to the imperative API (below) when you are updating hundreds or thousands of nodes every frame, not before.
+
+`// A declared property, eased by a normal Flutter animation.TweenAnimationBuilder<double>(  tween: Tween(begin: 0.0, end: targetHeight),  duration: const Duration(milliseconds: 300),  builder: (context, height, _) => SceneMesh(    geometry: crateGeometry,    material: crateMaterial,    position: vm.Vector3(0, height, 0),  ),)`
+
+The one real cost to avoid is rebuilding GPU resources, so keep the `geometry` and `material` instances stable across rebuilds (as above) and animate transforms and visibility freely.
+
+For motion that should run on its own, independent of widget state (the cake’s steady turn, a physics step, anything you would rather not rebuild for), attach a `Component` and let the engine drive it each frame instead.
+
+```
+class SpinComponent extends Component {  SpinComponent(this.radiansPerSecond);
+  final double radiansPerSecond;
+  @override  void update(double deltaSeconds) {    node.localTransform.rotateY(radiansPerSecond * deltaSeconds);    node.markTransformDirty();  }}
+```
+
+Components in the `components` list are diffed by identity. Keep an instance stable across rebuilds (a field on your `State`) and it keeps its own state; swap in a different instance to replace the behavior. 【7†Core concepts】 covers the component lifecycle.
+
+Both are first class. Use state and Flutter’s animation tools for motion driven by your UI or app logic, and reach for a component when the motion is continuous and self-contained, or when you would rather not rebuild for it.
+
+## Mixing with the imperative API
+
+【30†Section titled “Mixing with the imperative API”】
+
+The two styles compose per subtree, in both directions.
+
+**An imperative island in a declarative tree.**`SceneNodeHost` mounts an app-owned node; the tree decides where it hangs and never touches its contents.
+
+`SceneNode(  position: vm.Vector3(0, 0, 10),  children: [SceneNodeHost(node: proceduralTerrainRoot)],)`
+
+**Declarative children over an app-owned scene.** Both `SceneView` constructors take `children`, and `SceneSubtree` mounts declarative widgets under any node of an imperative scene.
+
+`SceneView(  scene, // app-owned, mutated imperatively as always  children: [    SceneSubtree(      parent: waypointAnchor,      children: [SceneMesh(geometry: markerGeometry, material: markerMaterial)],    ),  ],)`
+
+**An imperative handle to a declared node.** A `SceneNodeController` exposes the widget-managed `Node` for raycasts, camera following, or physics queries.
+
+`final controller = SceneNodeController();// In buildSceneNode(controller: controller, children: [...]);// Elsewherefinal worldPosition = controller.node?.globalTransform.getTranslation();`
+
+The ownership rule from 【7†Core concepts】 governs the mix. A widget owns the nodes it creates, so imperative writes to properties a widget declares are overwritten on its next build. Reading is always fine.
+
+## Loading and reveal
+
+【31†Section titled “Loading and reveal”】
+
+Declarative models participate in the view’s loading gate. Give the view a `loadingBuilder` (or a `loading` group, or `warmUp: true`) and it holds its reveal until every `SceneModel` in the children has loaded, then compiles pipelines before the first visible frame.
+
+`SceneView.declarative(  warmUp: true,  loadingBuilder: (context, progress) =>      const Center(child: CircularProgressIndicator()),  children: [SceneModel('assets/showroom.glb')],)`
+
+Per-model `placeholder` and `error` builders are also available on `SceneModel` for scenes that reveal incrementally; see 【19†Assets and loading】.
+
+## Hot reload
+
+【32†Section titled “Hot reload”】
+
+Because the scene is a function of `build()`, hot reload reconciles structural edits in place. Change a transform, add a child, or swap a material, and the running scene updates without losing app state. Asset-backed content participates too, editing a `.glb` a `SceneModel` loaded re-imports and remounts it in place.
+
+## Where the imperative API fits
+
+【33†Section titled “Where the imperative API fits”】
+
+Reach for the imperative style when content is not a function of widget state, procedural generation, editors, streaming worlds, or bulk per-frame updates across hundreds of nodes. Everything you learned here transfers, the widgets were writing to the same `Scene`, `Node`, and `Component` objects the whole time. The 【12†Scene graph】 guide picks up from there.
+
+【9†Previous Overview】【11†Next Build a product configurator】
+
+Links/Buttons:
+- [1](https://fscene.dev/guides/declarative-scenes/#_top)
+- [2](https://fscene.dev/)
+- [3](https://github.com/bdero/flutter_scene)
+- [4](https://fscene.dev/getting-started/)
+- [5](https://fscene.dev/getting-started/installation/)
+- [6](https://fscene.dev/getting-started/your-first-scene/)
+- [7](https://fscene.dev/getting-started/core-concepts/)
+- [8](https://fscene.dev/editor/)
+- [9](https://fscene.dev/guides/)
+- [10](https://fscene.dev/guides/declarative-scenes/)
+- [11](https://fscene.dev/guides/build-a-configurator/)
+- [12](https://fscene.dev/guides/scene-graph/)
+- [13](https://fscene.dev/guides/geometry/)
+- [14](https://fscene.dev/guides/materials/)
+- [15](https://fscene.dev/guides/custom-materials/)
+- [16](https://fscene.dev/guides/lighting-and-environment/)
+- [17](https://fscene.dev/guides/post-processing/)
+- [18](https://fscene.dev/guides/cameras/)
+- [19](https://fscene.dev/guides/assets-and-loading/)
+- [20](https://fscene.dev/guides/animation/)
+- [21](https://fscene.dev/guides/picking-and-input/)
+- [22](https://fscene.dev/guides/widgets/)
+- [23](https://fscene.dev/api/flutter_scene/latest/)
+- [24](https://fscene.dev/api/flutter_scene_rapier/latest/)
+- [25](https://fscene.dev/guides/declarative-scenes/#the-pieces)
+- [26](https://fscene.dev/guides/declarative-scenes/#the-tree)
+- [27](https://fscene.dev/guides/declarative-scenes/#the-node-widgets)
+- [28](https://fscene.dev/guides/declarative-scenes/#the-owned-scene-view)
+- [29](https://fscene.dev/guides/declarative-scenes/#animating-the-scene)
+- [30](https://fscene.dev/guides/declarative-scenes/#mixing-with-the-imperative-api)
+- [31](https://fscene.dev/guides/declarative-scenes/#loading-and-reveal)
+- [32](https://fscene.dev/guides/declarative-scenes/#hot-reload)
+- [33](https://fscene.dev/guides/declarative-scenes/#where-the-imperative-api-fits)
